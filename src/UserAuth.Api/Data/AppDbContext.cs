@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using UserAuth.Api.Entities;
 
 namespace UserAuth.Api.Data
 {
@@ -8,5 +9,7 @@ namespace UserAuth.Api.Data
         {
         }
 
+        public DbSet<User> Users => Set<User>();
+        public DbSet<OtpVerification> OtpVerifications => Set<OtpVerification>();
     }
 }
