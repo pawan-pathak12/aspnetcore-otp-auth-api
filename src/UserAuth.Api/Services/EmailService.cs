@@ -1,7 +1,7 @@
 ﻿using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
-using UserAuth.Api.Interfaces;
+using UserAuth.Api.Interfaces.Service;
 
 namespace UserAuth.Api.Services;
 

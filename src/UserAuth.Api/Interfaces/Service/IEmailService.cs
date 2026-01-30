@@ -1,4 +1,4 @@
-﻿namespace UserAuth.Api.Interfaces
+﻿namespace UserAuth.Api.Interfaces.Service
 {
     public interface IEmailService
     {

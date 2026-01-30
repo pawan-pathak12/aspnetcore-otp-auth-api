@@ -5,6 +5,7 @@ namespace UserAuth.Api.DTOs
     public class RegisterRequestDto
     {
         [Required]
+        [EmailAddress]
         public string? Email { get; set; }
     }
 }

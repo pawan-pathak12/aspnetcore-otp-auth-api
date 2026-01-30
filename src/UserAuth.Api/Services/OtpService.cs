@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using UserAuth.Api.Data;
 using UserAuth.Api.Entities;
-using UserAuth.Api.Interfaces;
+using UserAuth.Api.Interfaces.Service;
 
 namespace UserAuth.Api.Services;
 
@@ -34,35 +34,49 @@ public class OtpService : IOtpService
         _dbContext.OtpVerifications.Add(otpEntry);
         await _dbContext.SaveChangesAsync();
 
-        _logger.LogInformation("OTP generated for {Email}: {Otp}", email, otp);
+        _logger.LogInformation("OTP generated for {Email} : {Otp}", email, otp);
 
         await _emailService.SendEmailAsync(
             email,
             "Your OTP Code",
-            $"Your OTP is: {otp}\n\nIt expires in 5 minutes.\n\nIf you didn't request this, please ignore."
+            $"Your OTP is: {otp} \n It expires in 5 minutes.If you didn't request this, please ignore."
         );
     }
 
-    public async Task<bool> VerifyOtpAsync(string email, string otp)
+    public async Task<bool> VerifyOtpAndCreateUserAsync(string email, string otp)
     {
         var otpEntry = await _dbContext.OtpVerifications
-            .Where(x => x.Email == email.ToLower().Trim() &&
+            .Where(x => x.Email == email &&
                         x.OtpCode == otp &&
                         !x.IsUsed &&
                         x.ExpiryTime > DateTime.UtcNow)
             .OrderByDescending(x => x.Id)
-            .FirstOrDefaultAsync();  // Use async version!
+            .FirstOrDefaultAsync();
 
         if (otpEntry == null)
         {
             _logger.LogWarning("Invalid OTP attempt for {Email}", email);
             return false;
         }
-
         otpEntry.IsUsed = true;
+
+        var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Email == email);
+
+        if (user == null)
+        {
+            user = new User
+            {
+                Email = email,
+                IsActive = true,
+                IsVerified = true,
+                CreateAt = DateTime.UtcNow
+            };
+            await _dbContext.AddAsync(user);
+
+        }
         await _dbContext.SaveChangesAsync();
 
-        _logger.LogInformation("OTP verified successfully for {Email}", email);
+        _logger.LogInformation("OTP verified successfully for {Email} and added user too", email);
         return true;
     }
 }
