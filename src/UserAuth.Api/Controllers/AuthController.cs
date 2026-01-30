@@ -30,13 +30,18 @@ public class AuthController : ControllerBase
             return BadRequest("User Already Exists");
         }
 
-        await _otpService.GenerateAndSaveOtpAsync(request.Email);
+        var isOtpCreated = await _otpService.GenerateAndSaveOtpAsync(request.Email);
+        if (!isOtpCreated)
+        {
+            return BadRequest("Too many OTP requests. Try again later.");
+        }
         return Ok(new { message = "OTP sent to your email" });
     }
 
     [HttpPost("verify-otp")]
     public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequestDto request)
     {
+
         var isValid = await _otpService.VerifyOtpAndCreateUserAsync(request.Email, request.Otp);
 
         if (!isValid)

@@ -1,0 +1,24 @@
+﻿rules : 
+if user already exists then otp is not sent 
+old otp cant be used 
+
+if user request new otp then their all lat otp will be revoked Generate only one active OTP
+
+advance otp  used here: 
+rate limiting : max 5 otp requests per email per 15 min  per ip 
+otp regeneration cooldown : after user sent otp one time thet should wait for 1 min 
+							to resent otp again 
+
+hash otp in databse : if db is leak then stored otp will be useless 
+
+phase 1 : rate limiting logic 
+add field in otpvefification table : ipaddress 
+add helper method in otservice : isratelimited(string email) 
+
+phase 2 : otp resend cooldowm 
+add check before generating Otp 
+
+phase 3 : hash otp 
+create helper : securityhelper 
+ use that helper method in generating otp 
+ and during verification : hash incoming token and check it 
