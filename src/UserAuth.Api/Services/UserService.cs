@@ -50,5 +50,19 @@ namespace UserAuth.Api.Services
             return await _userRepository.UpdateAsync(user);
 
         }
+
+        public async Task<bool> LoginAsync(string email)
+        {
+            var user = await _appDbContext.Users.FirstOrDefaultAsync(x => x.Email == email);
+            if (user == null)
+            {
+                return false;
+            }
+            if (!user.IsVerified)
+            {
+                return false;
+            }
+            return true;
+        }
     }
 }

@@ -11,5 +11,6 @@ namespace UserAuth.Api.Interfaces.Service
         Task<IEnumerable<User>> GetAllAsync();
         Task<bool> UpdateAsync(User user);
         Task<bool> DeleteAsync(int id);
+        Task<bool> LoginAsync(string email);
     }
 }

@@ -32,8 +32,6 @@ public class AuthController : ControllerBase
 
         await _otpService.GenerateAndSaveOtpAsync(request.Email);
         return Ok(new { message = "OTP sent to your email" });
-
-
     }
 
     [HttpPost("verify-otp")]
@@ -48,5 +46,16 @@ public class AuthController : ControllerBase
 
 
         return Ok(new { message = "Email verified and user registered successfully" });
+    }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
+    {
+        var sucess = await _userService.LoginAsync(request.Email);
+        if (!sucess)
+        {
+            return Unauthorized("Invalid login or email not verified");
+        }
+        return Ok(new { message = "Login Sucessful" });
     }
 }
