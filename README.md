@@ -81,15 +81,33 @@ dotnet run
 
 ---
 
-## 📌 Planned Improvements
+## 🔮 Upcoming Features (Planned)
 
-- OTP hashing in database
-- Failed attempt lockout
-- Login endpoint
-- JWT authentication
-- File upload feature
-- IP-based rate limiting
-- Docker support
+### 🔑 JWT-Based Authentication
+- Email + password login
+- Role-based authorization (User / Admin)
+- Secure JWT access tokens
+
+### 🔄 Refresh Token Security
+- Refresh tokens stored as **hashed values**
+- Refresh token rotation
+- Automatic revocation of previous refresh tokens
+- Detection of **refresh token reuse**
+  - If an old refresh token is reused → all sessions revoked
+  - User is forced to re-login
+- Rate limiting on refresh token endpoint
+
+### 🧩 Combined Registration & Login Flow
+- Register → Send OTP
+- OTP verification
+- User sets password after OTP verification
+- Backend securely links password to verified email
+- Login → Issue access & refresh tokens
+
+### 🛡️ Additional Security Enhancements
+- Session invalidation on suspicious activity
+- Token revocation on password change
+- Improved audit logging
 
 ---
 
@@ -105,3 +123,4 @@ This project is built as a **learning exercise** to understand:
 ## 🧑‍💻 Author
 
 Built by a BCA student learning backend development with ASP.NET Core.
+
