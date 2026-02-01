@@ -6,7 +6,7 @@ namespace UserAuth.Api.Interfaces.Service
     {
 
         Task<(bool success, int id)> CreateAsync(User user);
-        Task<User?> GetEmailAsync(string email);
+        Task<User?> GetByEmailAsync(string email);
         Task<User?> GetByIdAsync(int id);
         Task<IEnumerable<User>> GetAllAsync();
         Task<bool> UpdateAsync(User user);
