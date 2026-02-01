@@ -12,14 +12,16 @@ public class AuthController : ControllerBase
 {
     private readonly PasswordHasher<User> _passwordHasher;
     private readonly IOtpService _otpService;
+    private readonly IRefreshTokenService _refreshTokenService;
     private readonly ILogger<AuthController> _logger;
     private readonly IUserService _userService;
     private readonly ITokenService _tokenService;
 
-    public AuthController(IOtpService otpService, ILogger<AuthController> logger, IUserService userService, ITokenService tokenService)
+    public AuthController(IOtpService otpService, IRefreshTokenService refreshTokenService, ILogger<AuthController> logger, IUserService userService, ITokenService tokenService)
     {
         this._passwordHasher = new PasswordHasher<User>();
         _otpService = otpService;
+        this._refreshTokenService = refreshTokenService;
         _logger = logger;
         this._userService = userService;
         this._tokenService = tokenService;
@@ -94,7 +96,19 @@ public class AuthController : ControllerBase
         }
 
         var token = _tokenService.GenerateAccessToken(user);
-        return Ok(new { Token = token });
+
+        //generate refresh token
+        var refreshToken = new RefreshToken
+        {
+            UserId = user.Id,
+            TokenHash = _tokenService.GenerateRefreshTokenAsync(),
+            CreatedAt = DateTime.UtcNow,
+            IsRevoked = false,
+            ExpiredAt = DateTime.UtcNow.AddDays(1)
+        };
+
+        await _refreshTokenService.CreateTokenAsync(refreshToken);
+        return Ok(new { Token = token, refreshToken = refreshToken.TokenHash });
     }
 
     //REGISTER 
@@ -119,6 +133,37 @@ public class AuthController : ControllerBase
         }
         return Ok("User Created");
 
+    }
+
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh(string token)
+    {
+        var existingTokenData = await _refreshTokenService.GetDataByTokenAsync(token);
+        if (existingTokenData == null)
+        {
+            return BadRequest("Token is expired or invalid");
+        }
+        if (existingTokenData.ExpiredAt < DateTime.UtcNow)
+        {
+            return Unauthorized("Refresh token invalid or expired");
+        }
+        var user = existingTokenData.User;
+        user.Role = "Admin"; //hard coded 
+        // create access and refresh tokem 
+        var accessToken = _tokenService.GenerateAccessToken(user);
+        existingTokenData.IsRevoked = true;
+        var refreshToken = new RefreshToken
+        {
+            UserId = existingTokenData.UserId,
+            TokenHash = _tokenService.GenerateRefreshTokenAsync(),
+            CreatedAt = DateTime.UtcNow,
+            IsRevoked = false,
+            ExpiredAt = DateTime.UtcNow.AddDays(7)
+        };
+
+        await _refreshTokenService.CreateTokenAsync(refreshToken);
+
+        return Ok(new { accesstoken = accessToken, refreshToken = refreshToken.TokenHash });
     }
 
     #endregion

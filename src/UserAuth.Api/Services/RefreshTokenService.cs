@@ -1,4 +1,6 @@
-﻿using UserAuth.Api.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using UserAuth.Api.Data;
+using UserAuth.Api.Entities;
 using UserAuth.Api.Interfaces.Repository;
 using UserAuth.Api.Interfaces.Service;
 
@@ -7,10 +9,12 @@ namespace UserAuth.Api.Services
     public class RefreshTokenService : IRefreshTokenService
     {
         private readonly IRefreshTokenRepository _refreshTokenRepository;
+        private readonly AppDbContext _context;
 
-        public RefreshTokenService(IRefreshTokenRepository refreshTokenRepository)
+        public RefreshTokenService(IRefreshTokenRepository refreshTokenRepository, AppDbContext context)
         {
             _refreshTokenRepository = refreshTokenRepository;
+            this._context = context;
         }
 
         public async Task<bool> CreateTokenAsync(RefreshToken token)
@@ -41,6 +45,14 @@ namespace UserAuth.Api.Services
         public async Task<bool> DeleteTokenAsync(int id)
         {
             return await _refreshTokenRepository.DeleteAsync(id);
+        }
+        // later convert token to tokenhash
+        public async Task<RefreshToken?> GetDataByTokenAsync(string token)
+        {
+            var existingData = await _context.RefreshTokens.Include(x => x.User).FirstOrDefaultAsync(
+                x => x.TokenHash == token && !x.IsRevoked);
+
+            return existingData;
         }
     }
 }

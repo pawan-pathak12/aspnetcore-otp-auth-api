@@ -1,6 +1,7 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using UserAuth.Api.Data;
 using UserAuth.Api.Entities;
@@ -27,8 +28,9 @@ namespace UserAuth.Api.Services
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub , user.Id.ToString()),
+                new Claim(ClaimTypes.Role , user.Role),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email) ,
-                new Claim(JwtRegisteredClaimNames.Jti , Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Jti , Guid.NewGuid().ToString()),
             };
 
             var key = new SymmetricSecurityKey(
@@ -49,10 +51,13 @@ namespace UserAuth.Api.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-        public string GenerateRefreshTokenAsync(string token)
+        public string GenerateRefreshTokenAsync()
         {
-            return null;
+            var randomBytes = new byte[64];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomBytes);
 
+            return Convert.ToBase64String(randomBytes);
         }
         public string HashToken(string token)
         {
