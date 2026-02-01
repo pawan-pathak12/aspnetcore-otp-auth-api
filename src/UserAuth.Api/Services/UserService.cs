@@ -31,7 +31,7 @@ namespace UserAuth.Api.Services
             return await _userRepository.DeleteAsync(id);
         }
 
-        public async Task<User?> GetEmailAsync(string email)
+        public async Task<User?> GetByEmailAsync(string email)
         {
             return await _appDbContext.Users.FirstOrDefaultAsync(x => x.Email == email);
         }
