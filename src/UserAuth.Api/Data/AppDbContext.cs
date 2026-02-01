@@ -10,6 +10,7 @@ namespace UserAuth.Api.Data
         }
 
         public DbSet<User> Users => Set<User>();
+        public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
         public DbSet<OtpVerification> OtpVerifications => Set<OtpVerification>();
     }
 }
