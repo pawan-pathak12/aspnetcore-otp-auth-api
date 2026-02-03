@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using UserAuth.Api.DTOs;
 using UserAuth.Api.Entities;
+using UserAuth.Api.Helpers;
 using UserAuth.Api.Interfaces.Service;
 
 namespace UserAuth.Api.Controllers;
@@ -16,8 +17,10 @@ public class AuthController : ControllerBase
     private readonly ILogger<AuthController> _logger;
     private readonly IUserService _userService;
     private readonly ITokenService _tokenService;
+    private readonly IAuthService _authService;
 
-    public AuthController(IOtpService otpService, IRefreshTokenService refreshTokenService, ILogger<AuthController> logger, IUserService userService, ITokenService tokenService)
+    public AuthController(IOtpService otpService, IRefreshTokenService refreshTokenService, ILogger<AuthController> logger,
+        IUserService userService, ITokenService tokenService, IAuthService authService)
     {
         this._passwordHasher = new PasswordHasher<User>();
         _otpService = otpService;
@@ -25,6 +28,7 @@ public class AuthController : ControllerBase
         _logger = logger;
         this._userService = userService;
         this._tokenService = tokenService;
+        this._authService = authService;
     }
 
     #region Otp based 
@@ -136,34 +140,53 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("refresh")]
-    public async Task<IActionResult> Refresh(string token)
+    public async Task<IActionResult> Refresh()
     {
-        var existingTokenData = await _refreshTokenService.GetDataByTokenAsync(token);
-        if (existingTokenData == null)
-        {
-            return BadRequest("Token is expired or invalid");
-        }
-        if (existingTokenData.ExpiredAt < DateTime.UtcNow)
-        {
-            return Unauthorized("Refresh token invalid or expired");
-        }
-        var user = existingTokenData.User;
-        user.Role = "Admin"; //hard coded 
-        // create access and refresh tokem 
-        var accessToken = _tokenService.GenerateAccessToken(user);
-        existingTokenData.IsRevoked = true;
-        var refreshToken = new RefreshToken
-        {
-            UserId = existingTokenData.UserId,
-            TokenHash = _tokenService.GenerateRefreshTokenAsync(),
-            CreatedAt = DateTime.UtcNow,
-            IsRevoked = false,
-            ExpiredAt = DateTime.UtcNow.AddDays(7)
-        };
 
-        await _refreshTokenService.CreateTokenAsync(refreshToken);
+        //1.find the refresh token 
+        var refreshToken = Request.Cookies["refreshToken"];
 
-        return Ok(new { accesstoken = accessToken, refreshToken = refreshToken.TokenHash });
+        if (string.IsNullOrEmpty(refreshToken))
+        {
+            return Unauthorized("Refresh token missing or invalid");
+        }
+
+        var (sucess, errorMessage, result) = await _authService.RefreshToken(refreshToken);
+        if (!sucess)
+        {
+            return BadRequest($"Error : {errorMessage}");
+        }
+        //return refresh token in cookie
+
+        Response.Cookies.Append(
+            "refreshToken",
+            result.RefreshToken,
+             CookieOptionsHelper.RefreshTokenCookie(result.ExpiredAt)
+         );
+        return Ok(new { accessToken = result.AccessToken });
+    }
+    [HttpPost("Logout")]
+    public async Task<IActionResult> Logout()
+    {
+        var refreshToken = Request.Cookies["refreshToken"];
+        if (!string.IsNullOrEmpty(refreshToken))
+        {
+            return BadRequest("Token not found or invalid");
+        }
+
+        var storedTokenData = await _refreshTokenService.GetDataByTokenAsync(refreshToken);
+        if (storedTokenData == null)
+        {
+            return Ok("Token is already Invalid");
+        }
+        storedTokenData.IsRevoked = true;
+
+        // add update method 
+
+        // delete cookie 
+        Response.Cookies.Delete("refreshToken");
+
+        return Ok("Log out successfully");
     }
 
     #endregion
