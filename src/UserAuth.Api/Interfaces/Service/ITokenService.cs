@@ -6,6 +6,7 @@ namespace UserAuth.Api.Interfaces.Service
     {
         string GenerateAccessToken(User user);
         string GenerateRefreshTokenAsync();
+        string HashToken(string token);
 
     }
 }

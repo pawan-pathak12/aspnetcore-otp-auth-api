@@ -1,4 +1,5 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -13,11 +14,13 @@ namespace UserAuth.Api.Services
     {
         private readonly AppDbContext _dbContext;
         private readonly IConfiguration _configuration;
+        private readonly PasswordHasher<User> _passwordHasher;
 
         public TokenService(AppDbContext dbContext, IConfiguration configuration)
         {
             this._dbContext = dbContext;
             this._configuration = configuration;
+            this._passwordHasher = new PasswordHasher<User>();
         }
 
         public string GenerateAccessToken(User user)
@@ -61,7 +64,10 @@ namespace UserAuth.Api.Services
         }
         public string HashToken(string token)
         {
-            return null;
+            using var sha256 = SHA256.Create();
+            var bytes = Encoding.UTF8.GetBytes(token);
+            var hash = sha256.ComputeHash(bytes);
+            return Convert.ToBase64String((hash));
         }
 
     }
