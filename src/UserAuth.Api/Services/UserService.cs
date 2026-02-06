@@ -68,6 +68,8 @@ namespace UserAuth.Api.Services
             return true;
         }
 
+
+
         public async Task<string?> HashPassword(string email, string password)
         {
             var user = await GetByEmailAsync(email);
@@ -79,10 +81,7 @@ namespace UserAuth.Api.Services
             return hash;
         }
 
-        public async Task<string?> VerifyHashPasswordAsync(string email, string password)
-        {
 
-        }
 
 
     }

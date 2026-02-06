@@ -176,7 +176,7 @@ namespace UserAuth.Api.Services
 
         public async Task<(bool success, string errorMessage)> VerifyOtpAsync(string otp, string email)
         {
-            var isValid = await _otpService.VerifyOtpAndCreateUserAsync(otp, email);
+            var isValid = await _otpService.VerifyOtpAndCreateUserAsync(email, otp);
             if (!isValid)
             {
                 return (false, "Opt is invalid or expired");
