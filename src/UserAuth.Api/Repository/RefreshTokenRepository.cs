@@ -57,4 +57,20 @@ public class RefreshTokenRepository : IRefreshTokenRepository
         await _context.SaveChangesAsync();
         return true;
     }
+
+    public async Task<bool> UpdateAsync(int id, RefreshToken refreshToken)
+    {
+        var refreshTokenData = await _context.RefreshTokens.FirstOrDefaultAsync(x => x.Id == id);
+        if (refreshTokenData == null)
+        {
+            return false;
+        }
+
+        // Update relevant fields
+        refreshTokenData.IsRevoked = refreshToken.IsRevoked;
+        refreshTokenData.RevokedAt = refreshToken.RevokedAt;
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
 }

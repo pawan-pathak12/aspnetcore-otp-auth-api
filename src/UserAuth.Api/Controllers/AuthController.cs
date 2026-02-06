@@ -68,7 +68,7 @@ public class AuthController : ControllerBase
         return Ok(new { message = "Email verified and user registered successfully" });
     }
 
-    [HttpPost("login")]
+    [HttpPost("login-otp")]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
     {
         var sucess = await _userService.LoginAsync(request.Email);
@@ -142,7 +142,6 @@ public class AuthController : ControllerBase
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh()
     {
-
         //1.find the refresh token 
         var refreshToken = Request.Cookies["refreshToken"];
 
@@ -151,7 +150,7 @@ public class AuthController : ControllerBase
             return Unauthorized("Refresh token missing or invalid");
         }
 
-        var (sucess, errorMessage, result) = await _authService.RefreshToken(refreshToken);
+        var (sucess, errorMessage, result) = await _authService.RotateRefreshTokenAsync(refreshToken);
         if (!sucess)
         {
             return BadRequest($"Error : {errorMessage}");
@@ -160,10 +159,10 @@ public class AuthController : ControllerBase
 
         Response.Cookies.Append(
             "refreshToken",
-            result.RefreshToken,
+            result.HashedRefreshToken,
              CookieOptionsHelper.RefreshTokenCookie(result.ExpiredAt)
          );
-        return Ok(new { accessToken = result.AccessToken });
+        return Ok(new { accessToken = result.HashedAccessToken });
     }
     [HttpPost("Logout")]
     public async Task<IActionResult> Logout()

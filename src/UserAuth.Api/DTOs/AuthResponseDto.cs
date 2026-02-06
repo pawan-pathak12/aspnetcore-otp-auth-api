@@ -2,8 +2,8 @@
 {
     public class AuthResponseDto
     {
-        public string? AccessToken { get; set; }
-        public string? RefreshToken { get; set; }
+        public string? HashedAccessToken { get; set; }
+        public string? HashedRefreshToken { get; set; }
         public DateTime ExpiredAt { get; set; }
     }
 }

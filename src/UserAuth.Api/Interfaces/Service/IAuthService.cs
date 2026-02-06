@@ -4,6 +4,6 @@ namespace UserAuth.Api.Interfaces.Service
 {
     public interface IAuthService
     {
-        Task<(bool success, string errorMessage, AuthResponseDto? response)> RefreshToken(string refreshToken);
+        Task<(bool success, string errorMessage, AuthResponseDto? response)> RotateRefreshTokenAsync(string refreshToken);
     }
 }
