@@ -10,6 +10,7 @@ namespace UserAuth.Api.Interfaces.Service
         Task<bool> RevokeTokenAsync(int id);
         Task<bool> DeleteTokenAsync(int id);
         Task<RefreshToken?> GetDataByTokenAsync(string token);
+        Task<bool> UpdateAsync(int id, RefreshToken refreshToken);
 
 
     }

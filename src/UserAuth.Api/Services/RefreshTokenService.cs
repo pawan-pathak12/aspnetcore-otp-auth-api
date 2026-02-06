@@ -54,5 +54,10 @@ namespace UserAuth.Api.Services
 
             return existingData;
         }
+
+        public async Task<bool> UpdateAsync(int id, RefreshToken refreshToken)
+        {
+            return await _refreshTokenRepository.UpdateAsync(id, refreshToken);
+        }
     }
 }

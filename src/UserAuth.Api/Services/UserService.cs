@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using UserAuth.Api.Data;
 using UserAuth.Api.Entities;
 using UserAuth.Api.Interfaces.Repository;
@@ -10,11 +11,13 @@ namespace UserAuth.Api.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly AppDbContext _appDbContext;
+        private readonly PasswordHasher<User> _passwordHasher;
 
         public UserService(IUserRepository userRepository, AppDbContext appDbContext)
         {
             this._userRepository = userRepository;
             this._appDbContext = appDbContext;
+            _passwordHasher = new PasswordHasher<User>();
         }
         public async Task<(bool success, int id)> CreateAsync(User user)
         {
@@ -64,5 +67,22 @@ namespace UserAuth.Api.Services
             }
             return true;
         }
+
+
+
+        public async Task<string?> HashPassword(string email, string password)
+        {
+            var user = await GetByEmailAsync(email);
+            if (user == null)
+            {
+                return null;
+            }
+            var hash = _passwordHasher.HashPassword(user, password);
+            return hash;
+        }
+
+
+
+
     }
 }
