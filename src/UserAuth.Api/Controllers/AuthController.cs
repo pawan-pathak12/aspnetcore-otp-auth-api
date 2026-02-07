@@ -90,13 +90,13 @@ public class AuthController : ControllerBase
 
         Response.Cookies.Append(
             "refreshToken",
-            response.RefreshTokenHash,
+            response.RefreshToken,
             CookieOptionsHelper.RefreshTokenCookie(response.ExpiryDate)
             );
 
         return Ok(new
         {
-            Token = response?.AccessTokenhash,
+            Token = response.AccessTokenhash,
         });
     }
 
@@ -123,7 +123,7 @@ public class AuthController : ControllerBase
 
         Response.Cookies.Append(
             "refreshToken",
-            response.RefreshTokenHash,
+            response.RefreshToken,
              CookieOptionsHelper.RefreshTokenCookie(response.ExpiryDate)
          );
         return Ok(new { accessToken = response.AccessTokenhash });

@@ -75,7 +75,7 @@ namespace UserAuth.Api.Services
 
             return AuthResult.Success(
                 _tokenService.HashToken(accesstoken),
-                hashToken, token.ExpiredAt
+                plainrefreshToken, token.ExpiredAt
                 );
 
         }

@@ -7,7 +7,7 @@
 
         //token
         public string? AccessTokenhash { get; set; }
-        public string? RefreshTokenHash { get; set; }
+        public string? RefreshToken { get; set; }
 
         //expiry 
         public DateTime ExpiryDate { get; set; }
@@ -18,7 +18,7 @@
             {
                 IsSuccess = true,
                 AccessTokenhash = accessTokenHash,
-                RefreshTokenHash = refreshTokenHash,
+                RefreshToken = refreshTokenHash,
                 ExpiryDate = expiryDate
             };
         }
