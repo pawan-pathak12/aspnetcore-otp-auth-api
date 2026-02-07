@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using UserAuth.Api.DTOs;
 using UserAuth.Api.Helpers;
 using UserAuth.Api.Interfaces.Service;
@@ -28,11 +29,11 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
     {
 
-        var (success, errorMessage) = await _authService.SendOtpAsync(request.Email);
+        var response = await _authService.SendOtpAsync(request.Email);
 
-        if (!success)
+        if (!response.IsSuccess)
         {
-            return BadRequest(errorMessage);
+            return BadRequest(response.Error);
         }
         return Ok(new { message = "OTP sent to your email" });
     }
@@ -40,10 +41,10 @@ public class AuthController : ControllerBase
     [HttpPost("verify-otp")]
     public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequestDto request)
     {
-        var (success, errorMessage) = await _authService.VerifyOtpAsync(request.Otp, request.Email);
-        if (!success)
+        var response = await _authService.VerifyOtpAsync(request.Otp, request.Email);
+        if (!response.IsSuccess)
         {
-            return BadRequest(errorMessage);
+            return BadRequest(response.Error);
         }
 
         return Ok(new { message = "Email verified and user registered successfully" });
@@ -64,38 +65,45 @@ public class AuthController : ControllerBase
     #endregion
 
     #region Jwt 
-    //login 
-    [HttpPost("LoginJWt")]
-    public async Task<IActionResult> LoginJwt([FromBody] LoginRequestJwtDto request)
-    {
-        var (success, errorMessage, response) = await _authService.LoginWithJwtAsync(request.Email, request.Password);
-        if (!success)
-        {
-            return BadRequest(errorMessage);
-        }
-
-        return Ok(new
-        {
-            Token = response?.HashedAccessToken,
-            refreshToken = response?.HashedRefreshToken
-        });
-    }
 
     //REGISTER 
     [HttpPost("register-jwt")]
     public async Task<IActionResult> RegisterJWt([FromBody] RegisterRequestDto request)
     {
-        var (success, errorMessage, id) = await _authService.RegisterWithJwt(request.Email, request.Password);
+        var resposne = await _authService.RegisterWithJwt(request.Email, request.Password);
 
-        if (!success)
+        if (!resposne.IsSuccess)
         {
-            return BadRequest(errorMessage);
+            return BadRequest(resposne.Error);
         }
         return Ok("User Created");
+    }
+    //login 
+    [HttpPost("LoginJWt")]
+    public async Task<IActionResult> LoginJwt([FromBody] LoginRequestJwtDto request)
+    {
+        var response = await _authService.LoginWithJwtAsync(request.Email, request.Password);
+        if (!response.IsSuccess)
+        {
+            return BadRequest(response.Error);
+        }
 
+        Response.Cookies.Append(
+            "refreshToken",
+            response.RefreshTokenHash,
+            CookieOptionsHelper.RefreshTokenCookie(response.ExpiryDate)
+            );
+
+        return Ok(new
+        {
+            Token = response?.AccessTokenhash,
+        });
     }
 
+
+
     [HttpPost("refresh")]
+    [EnableRateLimiting("RefreshTokenPolicy")]
     public async Task<IActionResult> Refresh()
     {
         //1.find the refresh token 
@@ -106,20 +114,21 @@ public class AuthController : ControllerBase
             return Unauthorized("Refresh token missing or invalid");
         }
 
-        var (sucess, errorMessage, result) = await _authService.RotateRefreshTokenAsync(refreshToken);
-        if (!sucess)
+        var response = await _authService.RotateRefreshTokenAsync(refreshToken);
+        if (!response.IsSuccess)
         {
-            return BadRequest($"Error : {errorMessage}");
+            return BadRequest($"Error : {response.Error}");
         }
         //return refresh token in cookie
 
         Response.Cookies.Append(
             "refreshToken",
-            result.HashedRefreshToken,
-             CookieOptionsHelper.RefreshTokenCookie(result.ExpiredAt)
+            response.RefreshTokenHash,
+             CookieOptionsHelper.RefreshTokenCookie(response.ExpiryDate)
          );
-        return Ok(new { accessToken = result.HashedAccessToken });
+        return Ok(new { accessToken = response.AccessTokenhash });
     }
+
     [HttpPost("Logout")]
     public async Task<IActionResult> Logout()
     {

@@ -24,8 +24,8 @@ namespace UserAuth.Api.Controllers
             if (user == null)
                 return BadRequest("User data is required.");
 
-            var (ssuccess, userId) = await _userService.CreateAsync(user);
-            return CreatedAtAction(nameof(GetUserById), new { id = userId }, user);
+            var resposne = await _userService.CreateAsync(user);
+            return CreatedAtAction(nameof(GetUserById), new { id = resposne.Id }, user);
         }
 
         // GET: api/User/{id}
