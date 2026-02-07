@@ -1,11 +1,12 @@
 ﻿using UserAuth.Api.Entities;
+using UserAuth.Api.Results;
 
 namespace UserAuth.Api.Interfaces.Service
 {
     public interface IUserService
     {
 
-        Task<(bool success, int id)> CreateAsync(User user);
+        Task<Result> CreateAsync(User user);
         Task<User?> GetByEmailAsync(string email);
         Task<User?> GetByIdAsync(int id);
         Task<IEnumerable<User>> GetAllAsync();

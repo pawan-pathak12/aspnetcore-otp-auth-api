@@ -4,6 +4,7 @@ using UserAuth.Api.Data;
 using UserAuth.Api.Entities;
 using UserAuth.Api.Interfaces.Repository;
 using UserAuth.Api.Interfaces.Service;
+using UserAuth.Api.Results;
 
 namespace UserAuth.Api.Services
 {
@@ -19,14 +20,14 @@ namespace UserAuth.Api.Services
             this._appDbContext = appDbContext;
             _passwordHasher = new PasswordHasher<User>();
         }
-        public async Task<(bool success, int id)> CreateAsync(User user)
+        public async Task<Result> CreateAsync(User user)
         {
-            var result = await _userRepository.AddAsync(user);
-            if (result <= 0)
+            var id = await _userRepository.AddAsync(user);
+            if (id <= 0)
             {
-                return (false, 0);
+                return Result.Failure("Uner not created");
             }
-            return (true, result);
+            return Result.Success(id);
         }
 
         public async Task<bool> DeleteAsync(int id)

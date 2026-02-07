@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using UserAuth.Api.DTOs;
 using UserAuth.Api.Entities;
 using UserAuth.Api.Interfaces.Service;
+using UserAuth.Api.Results;
 
 namespace UserAuth.Api.Services
 {
@@ -30,7 +30,7 @@ namespace UserAuth.Api.Services
         /*        use other service that is required for otp in here and
                 in controller this methods will be used to keep controller clean
        */
-        public async Task<(bool success, string errorMessage, AuthResponseDto? response)> RotateRefreshTokenAsync(string refreshToken)
+        public async Task<AuthResult> RotateRefreshTokenAsync(string refreshToken)
         {
             var incomingTokenHash = _tokenService.HashToken(refreshToken);
 
@@ -39,7 +39,7 @@ namespace UserAuth.Api.Services
             // check if token exists or not 
             if (existingToken == null)
             {
-                return (false, "Token not found ", null);
+                return AuthResult.Failure($"Token not found or invalid");
             }
 
             // if : reuse refreshToken detection 
@@ -47,18 +47,18 @@ namespace UserAuth.Api.Services
             if (existingToken.IsRevoked)
             {
                 await _refreshTokenService.RevokeTokenAsync(existingToken.UserId);
-                return (false, "Refresh token reuse detected , please relogin again.", null);
+                return AuthResult.Failure("Refresh token reuse detected , please relogin again.");
             }
             // check if expired or not
             if (existingToken.ExpiredAt < DateTime.UtcNow)
             {
-                return (false, "Refresh token is expired or invalid", null);
+                return AuthResult.Failure("Refresh token is expired or invalid");
             }
 
             //normal rotation of refreshtoken 
-            var accesstoken = _tokenService.GenerateAccessToken(existingToken.User);
             existingToken.IsRevoked = true;
 
+            var accesstoken = _tokenService.GenerateAccessToken(existingToken.User);
             var plainrefreshToken = _tokenService.GenerateRefreshTokenAsync();
             var hashToken = _tokenService.HashToken(plainrefreshToken);
 
@@ -73,21 +73,19 @@ namespace UserAuth.Api.Services
 
             await _refreshTokenService.CreateTokenAsync(token);
 
-            return (true, "", new AuthResponseDto
-            {
-                HashedAccessToken = accesstoken,
-                HashedRefreshToken = hashToken,
-                ExpiredAt = token.ExpiredAt
-            }
-            );
+            return AuthResult.Success(
+                _tokenService.HashToken(accesstoken),
+                plainrefreshToken, token.ExpiredAt
+                );
+
         }
 
-        public async Task<(bool success, string error, AuthResponseDto? response)> LoginWithJwtAsync(string email, string password)
+        public async Task<AuthResult> LoginAsync(string email, string password)
         {
             var user = await _userService.GetByEmailAsync(email);
             if (user == null)
             {
-                return (false, "Invalid credentials", null);
+                return AuthResult.Failure("Invalid credentials");
             }
 
             // verfify  password 
@@ -95,7 +93,7 @@ namespace UserAuth.Api.Services
             var result = _passwordHasher.VerifyHashedPassword(user, user.Password, password);
             if (result == PasswordVerificationResult.Failed)
             {
-                return (false, "Invalid credentials", null);
+                return AuthResult.Failure("Invalid credentials");
             }
             var token = _tokenService.GenerateAccessToken(user);
 
@@ -114,30 +112,10 @@ namespace UserAuth.Api.Services
             await _refreshTokenService.CreateTokenAsync(refreshToken);
 
 
-            return (true, "", new AuthResponseDto
-            {
-                HashedAccessToken = _tokenService.HashToken(plainRefreshToken),
-                HashedRefreshToken = refreshToken.TokenHash,
-                ExpiredAt = refreshToken.ExpiredAt
-            });
-
-        }
-
-        public async Task<(bool success, string errorMessage, int id)> RegisterWithJwt(string email, string password)
-        {
-            var user = await _userService.GetByEmailAsync(email);
-            if (user != null)
-            {
-                return (false, "User already Exists", 0);
-            }
-            user = new User
-            {
-                Email = email
-            };
-            user.Password = _passwordHasher.HashPassword(user, password);
-
-            var (success, id) = await _userService.CreateAsync(user);
-            return (true, "", id);
+            return AuthResult.Success(
+                _tokenService.HashToken(token),
+                refreshToken.TokenHash,
+                refreshToken.ExpiredAt);
         }
 
         public async Task<string> LogoutSessionAsync(string refreshToken)
@@ -162,38 +140,30 @@ namespace UserAuth.Api.Services
 
         */
 
-        public async Task<(bool success, string ErrorMessage)> SendOtpAsync(string email)
+        public async Task<AuthResult> SendOtpAsync(string email)
         {
             var user = await _userService.GetByEmailAsync(email);
             if (user != null)
             {
-                return (false, "User Already exists");
+                return AuthResult.Failure("User already Exists");
             }
 
             var isCreated = await _otpService.GenerateAndSaveOtpAsync(email);
-            return (true, "");
+            return new AuthResult { IsSuccess = true };
         }
 
-        public async Task<(bool success, string errorMessage)> VerifyOtpAsync(string otp, string email)
+        public async Task<AuthResult> VerifyOtpAsync(string otp, string email)
         {
-            var isValid = await _otpService.VerifyOtpAndCreateUserAsync(email, otp);
+            var isValid = await _otpService.VerifyOtpAsync(email, otp);
             if (!isValid)
             {
-                return (false, "Opt is invalid or expired");
+                return AuthResult.Failure("Opt is invalid or expired");
             }
-            return (true, "");
-        }
-
-        public async Task LoginAsync(int otp)
-        {
-
+            return new AuthResult { IsSuccess = true };
         }
 
         #endregion
 
-        #region Helper Method 
 
-
-        #endregion
     }
 }

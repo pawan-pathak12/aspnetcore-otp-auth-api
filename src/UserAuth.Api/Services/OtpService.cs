@@ -7,6 +7,7 @@ using UserAuth.Api.Interfaces.Service;
 
 namespace UserAuth.Api.Services;
 
+
 public class OtpService : IOtpService
 {
     private readonly AppDbContext _dbContext;
@@ -100,6 +101,29 @@ public class OtpService : IOtpService
         await _dbContext.SaveChangesAsync();
 
         _logger.LogInformation("OTP verified successfully for {Email} and added user too", email);
+        return true;
+    }
+
+    public async Task<bool> VerifyOtpAsync(string email, string otp)
+    {
+        var otpHash = HashOtp(otp);
+
+        var otpEntry = await _dbContext.OtpVerifications
+            .Where(x => x.Email == email &&
+                        x.OtpCode == otpHash &&
+                        !x.IsUsed &&
+                        x.ExpiryTime > DateTime.UtcNow)
+            .OrderByDescending(x => x.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (otpEntry == null)
+        {
+            _logger.LogWarning("Invalid OTP attempt for {Email}", email);
+            return false;
+        }
+        otpEntry.IsUsed = true;
+
+        await _dbContext.SaveChangesAsync();
         return true;
     }
 

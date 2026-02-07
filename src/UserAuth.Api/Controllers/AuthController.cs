@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using UserAuth.Api.DTOs;
 using UserAuth.Api.Helpers;
 using UserAuth.Api.Interfaces.Service;
@@ -21,81 +22,60 @@ public class AuthController : ControllerBase
         this._authService = authService;
     }
 
-    #region Otp based 
 
 
-    [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
+    #region New 
+
+    [HttpPost("register-sent-otp")]
+    public async Task<IActionResult> RegisterAsync([FromBody] SentOtpDto request)
     {
-
-        var (success, errorMessage) = await _authService.SendOtpAsync(request.Email);
-
-        if (!success)
+        var result = await _authService.SendOtpAsync(request.Email);
+        if (!result.IsSuccess)
         {
-            return BadRequest(errorMessage);
+            return BadRequest(result.Error);
         }
-        return Ok(new { message = "OTP sent to your email" });
+        return Ok("Otp is sented , please check email ");
     }
 
-    [HttpPost("verify-otp")]
-    public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequestDto request)
+    [HttpPost("register-verify-create-user")]
+    public async Task<IActionResult> VerifyAndRegisterAsync([FromBody] VerifyOtpRequestDto request)
     {
-        var (success, errorMessage) = await _authService.VerifyOtpAsync(request.Otp, request.Email);
-        if (!success)
+        // first verify otp
+        var result = await _authService.VerifyOtpAsync(request.Otp, request.Email);
+        if (!result.IsSuccess)
         {
-            return BadRequest(errorMessage);
+            return BadRequest(result.Error);
         }
-
-        return Ok(new { message = "Email verified and user registered successfully" });
+        // add user 
+        var response = await _authService.RegisterAsync(request.Email, request.Password);
+        if (!response.IsSuccess)
+        {
+            return BadRequest(response.Error);
+        }
+        return Ok("User Added Successfully");
     }
 
-
-    [HttpPost("login-otp")]
-    public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
+    [HttpPost("login")]
+    public async Task<IActionResult> LoginAsync([FromBody] LoginRequestDto request)
     {
-        var sucess = await _userService.LoginAsync(request.Email);
-        if (!sucess)
+        var response = await _authService.LoginAsync(request.Email, request.Password);
+        if (!response.IsSuccess)
         {
-            return Unauthorized("Invalid login or email not verified");
-        }
-        return Ok(new { message = "Login Sucessful" });
-    }
-
-    #endregion
-
-    #region Jwt 
-    //login 
-    [HttpPost("LoginJWt")]
-    public async Task<IActionResult> LoginJwt([FromBody] LoginRequestJwtDto request)
-    {
-        var (success, errorMessage, response) = await _authService.LoginWithJwtAsync(request.Email, request.Password);
-        if (!success)
-        {
-            return BadRequest(errorMessage);
+            return BadRequest(response.Error);
         }
 
-        return Ok(new
-        {
-            Token = response?.HashedAccessToken,
-            refreshToken = response?.HashedRefreshToken
-        });
+        Response.Cookies.Append(
+            "refreshToken",
+            response.RefreshToken,
+            CookieOptionsHelper.RefreshTokenCookie(response.ExpiryDate)
+            );
+
+        return Ok(new { accesstoken = response.AccessTokenhash });
     }
 
-    //REGISTER 
-    [HttpPost("register-jwt")]
-    public async Task<IActionResult> RegisterJWt([FromBody] RegisterRequestDto request)
-    {
-        var (success, errorMessage, id) = await _authService.RegisterWithJwt(request.Email, request.Password);
-
-        if (!success)
-        {
-            return BadRequest(errorMessage);
-        }
-        return Ok("User Created");
-
-    }
 
     [HttpPost("refresh")]
+    [EnableRateLimiting("RefreshTokenPolicy")]
     public async Task<IActionResult> Refresh()
     {
         //1.find the refresh token 
@@ -106,20 +86,21 @@ public class AuthController : ControllerBase
             return Unauthorized("Refresh token missing or invalid");
         }
 
-        var (sucess, errorMessage, result) = await _authService.RotateRefreshTokenAsync(refreshToken);
-        if (!sucess)
+        var response = await _authService.RotateRefreshTokenAsync(refreshToken);
+        if (!response.IsSuccess)
         {
-            return BadRequest($"Error : {errorMessage}");
+            return BadRequest($"Error : {response.Error}");
         }
         //return refresh token in cookie
 
         Response.Cookies.Append(
             "refreshToken",
-            result.HashedRefreshToken,
-             CookieOptionsHelper.RefreshTokenCookie(result.ExpiredAt)
+            response.RefreshToken,
+             CookieOptionsHelper.RefreshTokenCookie(response.ExpiryDate)
          );
-        return Ok(new { accessToken = result.HashedAccessToken });
+        return Ok(new { accessToken = response.AccessTokenhash });
     }
+
     [HttpPost("Logout")]
     public async Task<IActionResult> Logout()
     {
@@ -135,6 +116,5 @@ public class AuthController : ControllerBase
 
         return Ok("Log out successfully");
     }
-
     #endregion
 }

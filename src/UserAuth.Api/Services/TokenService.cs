@@ -46,7 +46,8 @@ namespace UserAuth.Api.Services
                  audience: jwtSettings["Audience"],
                  claims: claims,
                   expires: DateTime.UtcNow.AddMinutes(
-                      double.Parse(jwtSettings["ExpiresInMinutes"]!)),
+                      double.Parse(jwtSettings["ExpiresInMinutes"]!)
+                      ),
                   signingCredentials: creds
              );
 
