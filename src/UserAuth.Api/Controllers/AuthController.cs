@@ -70,7 +70,7 @@ public class AuthController : ControllerBase
     [HttpPost("register-jwt")]
     public async Task<IActionResult> RegisterJWt([FromBody] RegisterRequestDto request)
     {
-        var resposne = await _authService.RegisterWithJwt(request.Email, request.Password);
+        var resposne = await _authService.RegisterAsync(request.Email, request.Password);
 
         if (!resposne.IsSuccess)
         {
@@ -82,7 +82,7 @@ public class AuthController : ControllerBase
     [HttpPost("LoginJWt")]
     public async Task<IActionResult> LoginJwt([FromBody] LoginRequestJwtDto request)
     {
-        var response = await _authService.LoginWithJwtAsync(request.Email, request.Password);
+        var response = await _authService.LoginAsync(request.Email, request.Password);
         if (!response.IsSuccess)
         {
             return BadRequest(response.Error);

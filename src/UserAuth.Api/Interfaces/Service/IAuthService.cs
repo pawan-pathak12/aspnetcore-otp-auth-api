@@ -8,8 +8,8 @@ namespace UserAuth.Api.Interfaces.Service
         #region JWT
 
         Task<AuthResult> RotateRefreshTokenAsync(string refreshToken);
-        Task<AuthResult> LoginWithJwtAsync(string email, string password);
-        Task<AuthResult> RegisterWithJwt(string email, string password);
+        Task<AuthResult> LoginAsync(string email, string password);
+        Task<AuthResult> RegisterAsync(string email, string password);
         Task<string> LogoutSessionAsync(string refreshToken);
         #endregion
 

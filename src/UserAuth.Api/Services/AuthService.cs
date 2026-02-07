@@ -80,7 +80,7 @@ namespace UserAuth.Api.Services
 
         }
 
-        public async Task<AuthResult> LoginWithJwtAsync(string email, string password)
+        public async Task<AuthResult> LoginAsync(string email, string password)
         {
             var user = await _userService.GetByEmailAsync(email);
             if (user == null)
@@ -118,16 +118,14 @@ namespace UserAuth.Api.Services
                 refreshToken.ExpiredAt);
         }
 
-        public async Task<AuthResult> RegisterWithJwt(string email, string password)
+        public async Task<AuthResult> RegisterAsync(string email, string password)
         {
-            var user = await _userService.GetByEmailAsync(email);
-            if (user != null)
+            var user = new User
             {
-                return AuthResult.Failure("User already Exists");
-            }
-            user = new User
-            {
-                Email = email
+                Email = email,
+                IsActive = true,
+                CreateAt = DateTime.UtcNow,
+                IsVerified = true
             };
             user.Password = _passwordHasher.HashPassword(user, password);
 
@@ -175,7 +173,7 @@ namespace UserAuth.Api.Services
 
         public async Task<AuthResult> VerifyOtpAsync(string otp, string email)
         {
-            var isValid = await _otpService.VerifyOtpAndCreateUserAsync(email, otp);
+            var isValid = await _otpService.VerifyOtpAsync(email, otp);
             if (!isValid)
             {
                 return AuthResult.Failure("Opt is invalid or expired");
