@@ -22,65 +22,41 @@ public class AuthController : ControllerBase
         this._authService = authService;
     }
 
-    #region Otp based 
 
 
-    [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
+    #region New 
+
+    [HttpPost("register-sent-otp")]
+    public async Task<IActionResult> RegisterAsync([FromBody] SentOtpDto request)
     {
+        var result = await _authService.SendOtpAsync(request.Email);
+        if (!result.IsSuccess)
+        {
+            return BadRequest(result.Error);
+        }
+        return Ok("Otp is sented , please check email ");
+    }
 
-        var response = await _authService.SendOtpAsync(request.Email);
-
+    [HttpPost("register-verify-create-user")]
+    public async Task<IActionResult> VerifyAndRegisterAsync([FromBody] VerifyOtpRequestDto request)
+    {
+        // first verify otp
+        var result = await _authService.VerifyOtpAsync(request.Otp, request.Email);
+        if (!result.IsSuccess)
+        {
+            return BadRequest(result.Error);
+        }
+        // add user 
+        var response = await _authService.RegisterAsync(request.Email, request.Password);
         if (!response.IsSuccess)
         {
             return BadRequest(response.Error);
         }
-        return Ok(new { message = "OTP sent to your email" });
+        return Ok("User Added Successfully");
     }
 
-    [HttpPost("verify-otp")]
-    public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequestDto request)
-    {
-        var response = await _authService.VerifyOtpAsync(request.Otp, request.Email);
-        if (!response.IsSuccess)
-        {
-            return BadRequest(response.Error);
-        }
-
-        return Ok(new { message = "Email verified and user registered successfully" });
-    }
-
-
-    [HttpPost("login-otp")]
-    public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
-    {
-        var sucess = await _userService.LoginAsync(request.Email);
-        if (!sucess)
-        {
-            return Unauthorized("Invalid login or email not verified");
-        }
-        return Ok(new { message = "Login Sucessful" });
-    }
-
-    #endregion
-
-    #region Jwt 
-
-    //REGISTER 
-    [HttpPost("register-jwt")]
-    public async Task<IActionResult> RegisterJWt([FromBody] RegisterRequestDto request)
-    {
-        var resposne = await _authService.RegisterAsync(request.Email, request.Password);
-
-        if (!resposne.IsSuccess)
-        {
-            return BadRequest(resposne.Error);
-        }
-        return Ok("User Created");
-    }
-    //login 
-    [HttpPost("LoginJWt")]
-    public async Task<IActionResult> LoginJwt([FromBody] LoginRequestJwtDto request)
+    [HttpPost("login")]
+    public async Task<IActionResult> LoginAsync([FromBody] LoginRequestDto request)
     {
         var response = await _authService.LoginAsync(request.Email, request.Password);
         if (!response.IsSuccess)
@@ -94,12 +70,8 @@ public class AuthController : ControllerBase
             CookieOptionsHelper.RefreshTokenCookie(response.ExpiryDate)
             );
 
-        return Ok(new
-        {
-            Token = response.AccessTokenhash,
-        });
+        return Ok(new { accesstoken = response.AccessTokenhash });
     }
-
 
 
     [HttpPost("refresh")]
@@ -144,6 +116,5 @@ public class AuthController : ControllerBase
 
         return Ok("Log out successfully");
     }
-
     #endregion
 }

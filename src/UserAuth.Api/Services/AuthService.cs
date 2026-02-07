@@ -118,25 +118,6 @@ namespace UserAuth.Api.Services
                 refreshToken.ExpiredAt);
         }
 
-        public async Task<AuthResult> RegisterAsync(string email, string password)
-        {
-            var user = new User
-            {
-                Email = email,
-                IsActive = true,
-                CreateAt = DateTime.UtcNow,
-                IsVerified = true
-            };
-            user.Password = _passwordHasher.HashPassword(user, password);
-
-            var response = await _userService.CreateAsync(user);
-            if (!response.IsSuccess)
-            {
-                return AuthResult.Failure("failed to create user");
-            }
-            return new AuthResult { IsSuccess = true };
-        }
-
         public async Task<string> LogoutSessionAsync(string refreshToken)
         {
             var storedTokenData = await _refreshTokenService.GetDataByTokenAsync(refreshToken);
@@ -179,11 +160,6 @@ namespace UserAuth.Api.Services
                 return AuthResult.Failure("Opt is invalid or expired");
             }
             return new AuthResult { IsSuccess = true };
-        }
-
-        public async Task LoginAsync(int otp)
-        {
-
         }
 
         #endregion
