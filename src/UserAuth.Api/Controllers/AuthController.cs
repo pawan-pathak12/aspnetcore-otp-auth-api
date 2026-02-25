@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using UserAuth.Api.DTOs;
+using UserAuth.Api.Entities;
 using UserAuth.Api.Helpers;
 using UserAuth.Api.Interfaces.Service;
 
@@ -46,8 +47,13 @@ public class AuthController : ControllerBase
         {
             return BadRequest(result.Error);
         }
+        var user = new User
+        {
+            Email = request.Email,
+            Password = request.Password
+        };
         // add user 
-        var response = await _authService.RegisterAsync(request.Email, request.Password);
+        var response = await _authService.RegisterAsync(user);
         if (!response.IsSuccess)
         {
             return BadRequest(response.Error);

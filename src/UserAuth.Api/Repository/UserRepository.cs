@@ -64,5 +64,16 @@ namespace UserAuth.Api.Repository
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<User?> GetByEmailAsync(string email)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == email);
+            if (user == null)
+            {
+                return null;
+            }
+            return user;
+
+        }
     }
 }

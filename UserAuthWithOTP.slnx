@@ -2,4 +2,9 @@
   <Folder Name="/src/">
     <Project Path="src/UserAuth.Api/UserAuth.Api.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/UserAuthWithOTP.API/UserAuthWithOTP.API.csproj" />
+    <Project Path="tests/UserAuthWithOTP.DataLayer/UserAuthWithOTP.DataLayer.csproj" />
+    <Project Path="tests/UserAuthWithOTP.Unit/UserAuthWithOTP.Unit.csproj" />
+  </Folder>
 </Solution>
