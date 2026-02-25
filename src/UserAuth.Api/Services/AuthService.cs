@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using UserAuth.Api.Entities;
+using UserAuth.Api.Interfaces.Repository;
 using UserAuth.Api.Interfaces.Service;
 using UserAuth.Api.Results;
 
@@ -9,22 +10,21 @@ namespace UserAuth.Api.Services
     {
         private readonly ITokenService _tokenService;
         private readonly IRefreshTokenService _refreshTokenService;
-        private readonly IUserService _userService;
         private readonly IOtpService _otpService;
+        private readonly IUserRepository _userRepository;
         private readonly PasswordHasher<User> _passwordHasher;
 
 
-        public AuthService(ITokenService tokenService, IRefreshTokenService refreshTokenService,
-            IUserService userService, IOtpService otpService)
+        public AuthService(ITokenService tokenService, IRefreshTokenService refreshTokenService
+             , IOtpService otpService, IUserRepository userRepository)
         {
             this._tokenService = tokenService;
             this._refreshTokenService = refreshTokenService;
-            this._userService = userService;
             this._otpService = otpService;
+            this._userRepository = userRepository;
             _passwordHasher = new PasswordHasher<User>();
         }
 
-        // instead of using tuple in return type : use : Result <T>
 
         #region JWT 
         /*        use other service that is required for otp in here and
@@ -82,7 +82,7 @@ namespace UserAuth.Api.Services
 
         public async Task<AuthResult> LoginAsync(string email, string password)
         {
-            var user = await _userService.GetByEmailAsync(email);
+            var user = await _userRepository.GetByEmailAsync(email);
             if (user == null)
             {
                 return AuthResult.Failure("Invalid credentials");
@@ -135,14 +135,10 @@ namespace UserAuth.Api.Services
         #endregion
 
         #region OTP 
-        /*        use other service that is required for otp in here and
-                 in controller this methods will be used to keep controller clean
-
-        */
 
         public async Task<AuthResult> SendOtpAsync(string email)
         {
-            var user = await _userService.GetByEmailAsync(email);
+            var user = await _userRepository.GetByEmailAsync(email);
             if (user != null)
             {
                 return AuthResult.Failure("User already Exists");
@@ -160,6 +156,24 @@ namespace UserAuth.Api.Services
                 return AuthResult.Failure("Opt is invalid or expired");
             }
             return new AuthResult { IsSuccess = true };
+        }
+
+        public async Task<AuthResult> RegisterAsync(User user)
+        {
+            var existingUser = await _userRepository.GetByEmailAsync(user?.Email);
+            if (existingUser != null)
+            {
+                return AuthResult.Failure("User aleady exists.");
+            }
+            existingUser.Email = user.Email;
+            existingUser.Role = "User";
+
+            var passwordHssh = _passwordHasher.HashPassword(user, user.Password);
+            existingUser.Password = passwordHssh;
+            await _userRepository.AddAsync(existingUser);
+
+            return AuthResult.Success("user register Successfully");
+
         }
 
         #endregion

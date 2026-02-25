@@ -10,6 +10,7 @@ namespace UserAuth.Api.Interfaces.Repository
         Task<bool> UpdateAsync(User user);
         Task<bool> DeleteAsync(int id);
 
+        Task<User?> GetByEmailAsync(string email);
     }
 
 }

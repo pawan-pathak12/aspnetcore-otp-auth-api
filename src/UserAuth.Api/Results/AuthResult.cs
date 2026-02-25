@@ -4,6 +4,7 @@
     {
         public bool IsSuccess { get; set; }
         public string? Error { get; set; }
+        public string? Message { get; set; }
 
         //token
         public string? AccessTokenhash { get; set; }
@@ -21,6 +22,15 @@
                 RefreshToken = refreshTokenHash,
                 ExpiryDate = expiryDate
             };
+        }
+
+        public static AuthResult Success(string message)
+        {
+            return new AuthResult
+            {
+                IsSuccess = true,
+                Message = message
+            }
         }
         public static AuthResult Failure(string error)
         {
