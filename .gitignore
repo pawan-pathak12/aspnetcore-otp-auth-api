@@ -7,5 +7,8 @@ obj/
 *.user
 .vs/
 appsettings.json
+appsettings.Tests.json
+*.suo
+appsettings.Development.json
 .idea
 .idea/
