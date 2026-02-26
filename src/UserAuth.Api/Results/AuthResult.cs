@@ -30,7 +30,7 @@
             {
                 IsSuccess = true,
                 Message = message
-            }
+            };
         }
         public static AuthResult Failure(string error)
         {

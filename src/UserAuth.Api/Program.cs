@@ -6,7 +6,7 @@ using System.Threading.RateLimiting;
 using UserAuth.Api.Data;
 using UserAuth.Api.Interfaces.Repository;
 using UserAuth.Api.Interfaces.Service;
-using UserAuth.Api.Repository;
+using UserAuth.Api.Repository.EFCore;
 using UserAuth.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);

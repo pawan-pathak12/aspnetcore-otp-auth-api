@@ -53,61 +53,106 @@ namespace UserAuthWithOTP.DataLayer.Repositories
         public async Task GetByIdAsync_WhenTokenExists_ReturnToken()
         {
             //Arrange 
+            var token = await GenerateAndReturnToken();
+            var tokenId = await _tokenRepository.AddAsync(token);
 
             //Act 
+            var tokenData = await _tokenRepository.GetByIdAsync(tokenId);
 
             //Assert
+            Assert.IsNotNull(tokenData);
+            Assert.AreEqual(token.TokenHash, tokenData.TokenHash);
         }
 
         [TestMethod]
         public async Task GetByTokenAsync_WhenTokenExists_ReturnToken()
         {
             //Arrange 
-
+            var token = await GenerateAndReturnToken();
+            await _tokenRepository.AddAsync(token);
             //Act 
+            var tokenData = await _tokenRepository.GetByTokenAsync(token.TokenHash);
 
             //Assert
+            Assert.IsNotNull(tokenData);
+            Assert.AreEqual(token.IsRevoked, token.IsRevoked);
+            Assert.AreEqual(token.ExpiredAt, token.ExpiredAt);
         }
 
         [TestMethod]
         public async Task GetAllByUserIdAsync_WhenTokenExistsWuthUser_ReturnToken()
         {
             //Arrange 
+            var token = await GenerateAndReturnToken();
+            await _tokenRepository.AddAsync(token);
 
             //Act 
+            var tokenData = await _tokenRepository.GetAllByUserIdAsync(token.UserId);
 
             //Assert
+            Assert.IsNotNull(tokenData);
+            Assert.IsInstanceOfType<IEnumerable<RefreshToken>>(tokenData);
         }
 
         [TestMethod]
         public async Task UpdateAsync_WhenTokenExists_ReturnTrue()
         {
             //Arrange 
+            var token = await GenerateAndReturnToken();
+            var tokenId = await _tokenRepository.AddAsync(token);
+
+            var update = new RefreshToken
+            {
+                Id = tokenId,
+                TokenHash = token.TokenHash,
+                UserId = token.UserId,
+                IsRevoked = false,
+                RevokedAt = token.RevokedAt,
+                ExpiredAt = DateTime.UtcNow.AddDays(8)
+            };
 
             //Act 
+            var result = await _tokenRepository.UpdateAsync(tokenId, update);
 
             //Assert
+            Assert.IsTrue(result);
+
+            var tokenData = await _tokenRepository.GetByIdAsync(tokenId);
+            Assert.IsNotNull(tokenData);
+            Assert.AreEqual(update.ExpiredAt, tokenData.ExpiredAt);
         }
 
         [TestMethod]
         public async Task RevokeAsync_WhenTokenExists_ReturnTrue()
         {
             //Arrange 
-
+            var token = await GenerateAndReturnToken();
+            var tokenId = await _tokenRepository.AddAsync(token);
             //Act 
+            var result = await _tokenRepository.RevokeAsync(tokenId);
 
             //Assert
+            Assert.IsTrue(result);
 
+            var tokenData = await _tokenRepository.GetByIdAsync(tokenId);
+            Assert.IsNull(tokenData);
         }
 
         [TestMethod]
-        public async Task RevokeAsyncWhenTokenExists_ReturnTrue()
+        public async Task DeleteAsync_WhenTokenExists_ReturnTrue()
         {
             //Arrange 
+            var token = await GenerateAndReturnToken();
+            var tokenId = await _tokenRepository.AddAsync(token);
 
             //Act 
+            var result = await _tokenRepository.DeleteAsync(tokenId);
 
             //Assert
+            Assert.IsTrue(result);
+
+            var tokenData = await _userRepository.GetByIdAsync(tokenId);
+            Assert.IsNull(tokenData);
         }
 
         #region Private Helper Method
