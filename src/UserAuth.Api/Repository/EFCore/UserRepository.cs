@@ -3,7 +3,7 @@ using UserAuth.Api.Data;
 using UserAuth.Api.Entities;
 using UserAuth.Api.Interfaces.Repository;
 
-namespace UserAuth.Api.Repository
+namespace UserAuth.Api.Repository.EFCore
 {
     public class UserRepository : IUserRepository
     {
