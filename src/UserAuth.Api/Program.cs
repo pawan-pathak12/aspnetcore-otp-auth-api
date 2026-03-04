@@ -50,6 +50,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 #region register repository +Services 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<IOtpVerificationRepository, OtpVerificationRepository>();
 
 // Register Services
 builder.Services.AddScoped<IEmailService, EmailService>();

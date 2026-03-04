@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using UserAuth.Api.Entities;
-using UserAuth.Api.Interfaces.Repository;
 using UserAuth.Api.Interfaces.Service;
 using UserAuth.Api.Results;
 
@@ -11,17 +10,17 @@ namespace UserAuth.Api.Services
         private readonly ITokenService _tokenService;
         private readonly IRefreshTokenService _refreshTokenService;
         private readonly IOtpService _otpService;
-        private readonly IUserRepository _userRepository;
+        private readonly IUserService _userService;
         private readonly PasswordHasher<User> _passwordHasher;
 
 
         public AuthService(ITokenService tokenService, IRefreshTokenService refreshTokenService
-             , IOtpService otpService, IUserRepository userRepository)
+             , IOtpService otpService, IUserService userService)
         {
             this._tokenService = tokenService;
             this._refreshTokenService = refreshTokenService;
             this._otpService = otpService;
-            this._userRepository = userRepository;
+            this._userService = userService;
             _passwordHasher = new PasswordHasher<User>();
         }
 
@@ -82,7 +81,7 @@ namespace UserAuth.Api.Services
 
         public async Task<AuthResult> LoginAsync(string email, string password)
         {
-            var user = await _userRepository.GetByEmailAsync(email);
+            var user = await _userService.GetByEmailAsync(email);
             if (user == null)
             {
                 return AuthResult.Failure("Invalid credentials");
@@ -138,7 +137,7 @@ namespace UserAuth.Api.Services
 
         public async Task<AuthResult> SendOtpAsync(string email)
         {
-            var user = await _userRepository.GetByEmailAsync(email);
+            var user = await _userService.GetByEmailAsync(email);
             if (user != null)
             {
                 return AuthResult.Failure("User already Exists");
@@ -160,7 +159,7 @@ namespace UserAuth.Api.Services
 
         public async Task<AuthResult> RegisterAsync(User user)
         {
-            var existingUser = await _userRepository.GetByEmailAsync(user?.Email);
+            var existingUser = await _userService.GetByEmailAsync(user?.Email);
             if (existingUser != null)
             {
                 return AuthResult.Failure("User aleady exists.");
@@ -170,7 +169,7 @@ namespace UserAuth.Api.Services
 
             var passwordHssh = _passwordHasher.HashPassword(user, user.Password);
             existingUser.Password = passwordHssh;
-            await _userRepository.AddAsync(existingUser);
+            await _userService.CreateAsync(existingUser);
 
             return AuthResult.Success("user register Successfully");
 
