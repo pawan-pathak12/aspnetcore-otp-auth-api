@@ -73,4 +73,13 @@ public class RefreshTokenRepository : IRefreshTokenRepository
         await _context.SaveChangesAsync();
         return true;
     }
+
+    public async Task<RefreshToken?> GetDataByTokenAsync(string token)
+    {
+        var existingData = await _context.RefreshTokens
+            .Include(x => x.User)
+            .FirstOrDefaultAsync(x => x.TokenHash == token && !x.IsRevoked);
+
+        return existingData;
+    }
 }

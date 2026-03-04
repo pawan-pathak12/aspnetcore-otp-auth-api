@@ -12,13 +12,11 @@ namespace UserAuth.Api.Services
 {
     public class TokenService : ITokenService
     {
-        private readonly AppDbContext _dbContext;
         private readonly IConfiguration _configuration;
         private readonly PasswordHasher<User> _passwordHasher;
 
         public TokenService(AppDbContext dbContext, IConfiguration configuration)
         {
-            this._dbContext = dbContext;
             this._configuration = configuration;
             this._passwordHasher = new PasswordHasher<User>();
         }
