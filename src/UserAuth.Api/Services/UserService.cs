@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using UserAuth.Api.Data;
 using UserAuth.Api.Entities;
 using UserAuth.Api.Interfaces.Repository;
@@ -11,13 +10,11 @@ namespace UserAuth.Api.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
-        private readonly AppDbContext _appDbContext;
         private readonly PasswordHasher<User> _passwordHasher;
 
         public UserService(IUserRepository userRepository, AppDbContext appDbContext)
         {
             this._userRepository = userRepository;
-            this._appDbContext = appDbContext;
             _passwordHasher = new PasswordHasher<User>();
         }
         public async Task<Result> CreateAsync(User user)
@@ -37,7 +34,7 @@ namespace UserAuth.Api.Services
 
         public async Task<User?> GetByEmailAsync(string email)
         {
-            return await _appDbContext.Users.FirstOrDefaultAsync(x => x.Email == email);
+            return await _userRepository.GetByEmailAsync(email);
         }
         public async Task<IEnumerable<User>> GetAllAsync()
         {
@@ -57,7 +54,7 @@ namespace UserAuth.Api.Services
 
         public async Task<bool> LoginAsync(string email)
         {
-            var user = await _appDbContext.Users.FirstOrDefaultAsync(x => x.Email == email);
+            var user = await _userRepository.GetByEmailAsync(email);
             if (user == null)
             {
                 return false;

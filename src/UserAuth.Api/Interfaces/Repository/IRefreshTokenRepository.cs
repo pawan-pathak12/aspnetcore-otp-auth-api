@@ -8,6 +8,7 @@ namespace UserAuth.Api.Interfaces.Repository
         Task<RefreshToken?> GetByIdAsync(int id);
         Task<RefreshToken?> GetByTokenAsync(string token);
         Task<IEnumerable<RefreshToken>> GetAllByUserIdAsync(int userId);
+        Task<RefreshToken?> GetDataByTokenAsync(string token);
         Task<bool> UpdateAsync(int id, RefreshToken refreshToken);
         Task<bool> RevokeAsync(int id);
         Task<bool> DeleteAsync(int id);

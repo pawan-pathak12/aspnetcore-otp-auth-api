@@ -91,5 +91,16 @@ namespace UserAuth.Api.Repository.InMemory
             _tokens.Remove(token);
             return Task.FromResult(true);
         }
+
+        public Task<RefreshToken?> GetDataByTokenAsync(string token)
+        {
+            var tokenData = _tokens
+                .Find(x => x.TokenHash == token && !x.IsRevoked);
+            if (tokenData == null)
+            {
+                return null;
+            }
+            return Task.FromResult(tokenData);
+        }
     }
 }

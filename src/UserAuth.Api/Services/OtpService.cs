@@ -1,8 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using UserAuth.Api.Data;
 using UserAuth.Api.Entities;
+using UserAuth.Api.Interfaces.Repository;
 using UserAuth.Api.Interfaces.Service;
 
 namespace UserAuth.Api.Services;
@@ -10,37 +9,40 @@ namespace UserAuth.Api.Services;
 
 public class OtpService : IOtpService
 {
-    private readonly AppDbContext _dbContext;
+    private readonly IOtpVerificationRepository _otpVerificationRepository;
+
+    //  private readonly AppDbContext _dbContext;
     private readonly IEmailService _emailService;
     private readonly ILogger<OtpService> _logger;
+    private readonly IUserRepository _userRepository;
 
-    public OtpService(AppDbContext dbContext, IEmailService emailService, ILogger<OtpService> logger)
+    public OtpService(IOtpVerificationRepository otpVerificationRepository, IEmailService emailService, ILogger<OtpService> logger, IUserRepository userRepository)
     {
-        _dbContext = dbContext;
+        this._otpVerificationRepository = otpVerificationRepository;
+        //      _dbContext = dbContext;
         _emailService = emailService;
         _logger = logger;
+        this._userRepository = userRepository;
     }
 
     public async Task<bool> GenerateAndSaveOtpAsync(string email)
     {
         email = email.ToLower().Trim();
 
-        if (IsCooldownActive(email))
-        {
-            return false;
-        }
-        if (IsRateLimited(email))
+        // only can sent 5 otp in 15 min 
+        // currently stoping to sent 1 otp per min is remove .. 
+
+        if (await IsRateLimited(email))
         {
             return false;
         }
 
         //revoke previous OTPs
-        await RevokePreviousOtpsAsync(email);
+        await _otpVerificationRepository.RevokePreviousOtpsAsync(email);
 
         // Generate 6-digit OTP (fixed the range!)
         var otp = new Random().Next(100000, 1000000).ToString();
         var otphash = HashOtp(otp);
-        Console.WriteLine($"otp hash is {otphash}");
 
         var otpEntry = new OtpVerification
         {
@@ -50,9 +52,7 @@ public class OtpService : IOtpService
             IsUsed = false,
             CreatedAt = DateTime.UtcNow
         };
-
-        _dbContext.OtpVerifications.Add(otpEntry);
-        await _dbContext.SaveChangesAsync();
+        await _otpVerificationRepository.AddAsync(otpEntry);
 
         _logger.LogInformation("OTP generated for {Email} : {Otp}", email, otp);
 
@@ -68,23 +68,9 @@ public class OtpService : IOtpService
     public async Task<bool> VerifyOtpAndCreateUserAsync(string email, string otp)
     {
         var otpHash = HashOtp(otp);
+        var otpEntry = VerifyOtpAsync(email, otpHash);
 
-        var otpEntry = await _dbContext.OtpVerifications
-            .Where(x => x.Email == email &&
-                        x.OtpCode == otpHash &&
-                        !x.IsUsed &&
-                        x.ExpiryTime > DateTime.UtcNow)
-            .OrderByDescending(x => x.CreatedAt)
-            .FirstOrDefaultAsync();
-
-        if (otpEntry == null)
-        {
-            _logger.LogWarning("Invalid OTP attempt for {Email}", email);
-            return false;
-        }
-        otpEntry.IsUsed = true;
-
-        var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Email == email);
+        var user = await _userRepository.GetByEmailAsync(email);
 
         if (user == null)
         {
@@ -95,10 +81,9 @@ public class OtpService : IOtpService
                 IsVerified = true,
                 CreateAt = DateTime.UtcNow
             };
-            await _dbContext.AddAsync(user);
+            await _userRepository.AddAsync(user);
 
         }
-        await _dbContext.SaveChangesAsync();
 
         _logger.LogInformation("OTP verified successfully for {Email} and added user too", email);
         return true;
@@ -108,64 +93,45 @@ public class OtpService : IOtpService
     {
         var otpHash = HashOtp(otp);
 
-        var otpEntry = await _dbContext.OtpVerifications
-            .Where(x => x.Email == email &&
-                        x.OtpCode == otpHash &&
-                        !x.IsUsed &&
-                        x.ExpiryTime > DateTime.UtcNow)
-            .OrderByDescending(x => x.CreatedAt)
-            .FirstOrDefaultAsync();
+        var otpEntry = await _otpVerificationRepository.VerifyOtpAsync(email, otpHash);
 
         if (otpEntry == null)
         {
             _logger.LogWarning("Invalid OTP attempt for {Email}", email);
             return false;
         }
-        otpEntry.IsUsed = true;
-
-        await _dbContext.SaveChangesAsync();
+        await _otpVerificationRepository.MarkAsUsedAsync(email, otpHash);
         return true;
     }
 
     #region Helper Method
-    private bool IsRateLimited(string email)
+    private async Task<bool> IsRateLimited(string email)
     {
         email = email.ToLower().Trim();
         var fifteenMinutesAgo = DateTime.UtcNow.AddMinutes(-15);
-        int count = _dbContext.OtpVerifications.Count(x => x.Email == email
-            && x.CreatedAt >= fifteenMinutesAgo &&
-            !x.IsUsed);
 
+        var count = await _otpVerificationRepository.CountNumberOfOtpAsync(email, fifteenMinutesAgo);
         return count >= 5;
     }
 
-    private bool IsCooldownActive(string email)
-    {
-        var lastOtp = _dbContext.OtpVerifications.Where(
-            x => x.Email == email)
-            .OrderByDescending(x => x.CreatedAt)
-            .FirstOrDefault();
+    /*  private async Task<bool> IsCooldownActive(string email)
+      {
+          await _otpVerificationRepository.
 
-        if (lastOtp == null)
-        {
-            return false;
-        }
+          var lastOtp = _dbContext.OtpVerifications.Where(
+              x => x.Email == email)
+              .OrderByDescending(x => x.CreatedAt)
+              .FirstOrDefault();
 
-        return (DateTime.UtcNow - lastOtp.CreatedAt).TotalSeconds < 60;
-    }
+          if (lastOtp == null)
+          {
+              return false;
+          }
 
-    private async Task RevokePreviousOtpsAsync(string email)
-    {
-        var activeOtps = await _dbContext.OtpVerifications
-            .Where(x => x.Email == email && !x.IsUsed)
-            .ToListAsync();
+          return (DateTime.UtcNow - lastOtp.CreatedAt).TotalSeconds < 60;
+      }
+  */
 
-        foreach (var otp in activeOtps)
-        {
-            otp.IsUsed = true;
-        }
-        await _dbContext.SaveChangesAsync();
-    }
 
     public string HashOtp(string otp)
     {
