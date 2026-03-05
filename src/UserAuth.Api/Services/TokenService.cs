@@ -4,7 +4,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using UserAuth.Api.Data;
 using UserAuth.Api.Entities;
 using UserAuth.Api.Interfaces.Service;
 
@@ -15,7 +14,7 @@ namespace UserAuth.Api.Services
         private readonly IConfiguration _configuration;
         private readonly PasswordHasher<User> _passwordHasher;
 
-        public TokenService(AppDbContext dbContext, IConfiguration configuration)
+        public TokenService(IConfiguration configuration)
         {
             this._configuration = configuration;
             this._passwordHasher = new PasswordHasher<User>();

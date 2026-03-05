@@ -1,5 +1,4 @@
-﻿using UserAuth.Api.Data;
-using UserAuth.Api.Entities;
+﻿using UserAuth.Api.Entities;
 using UserAuth.Api.Interfaces.Repository;
 using UserAuth.Api.Interfaces.Service;
 
@@ -8,12 +7,11 @@ namespace UserAuth.Api.Services
     public class RefreshTokenService : IRefreshTokenService
     {
         private readonly IRefreshTokenRepository _refreshTokenRepository;
-        //        private readonly AppDbContext _context;
 
-        public RefreshTokenService(IRefreshTokenRepository refreshTokenRepository, AppDbContext context)
+
+        public RefreshTokenService(IRefreshTokenRepository refreshTokenRepository)
         {
             _refreshTokenRepository = refreshTokenRepository;
-            //          this._context = context;
         }
 
         public async Task<bool> CreateTokenAsync(RefreshToken token)
