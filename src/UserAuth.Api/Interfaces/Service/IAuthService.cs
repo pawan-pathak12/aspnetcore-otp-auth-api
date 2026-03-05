@@ -14,7 +14,7 @@ namespace UserAuth.Api.Interfaces.Service
         #endregion
 
         #region OTP 
-        Task<AuthResult> SendOtpAsync(string email);
+        Task<AuthResult> SendOtpToRegisterAsync(string email);
         Task<AuthResult> VerifyOtpAsync(string otp, string email);
         #endregion
 

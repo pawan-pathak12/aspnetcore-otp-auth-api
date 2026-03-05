@@ -136,7 +136,7 @@ namespace UserAuth.Api.Services
 
         #region OTP 
 
-        public async Task<AuthResult> SendOtpAsync(string email)
+        public async Task<AuthResult> SendOtpToRegisterAsync(string email)
         {
             var user = await _userRepo.GetByEmailAsync(email);
             if (user != null)

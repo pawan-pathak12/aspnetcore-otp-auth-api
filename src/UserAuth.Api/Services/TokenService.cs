@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -12,12 +11,10 @@ namespace UserAuth.Api.Services
     public class TokenService : ITokenService
     {
         private readonly IConfiguration _configuration;
-        private readonly PasswordHasher<User> _passwordHasher;
 
         public TokenService(IConfiguration configuration)
         {
             this._configuration = configuration;
-            this._passwordHasher = new PasswordHasher<User>();
         }
 
         public string GenerateAccessToken(User user)
