@@ -30,7 +30,7 @@ public class AuthController : ControllerBase
     [HttpPost("register-sent-otp")]
     public async Task<IActionResult> RegisterAsync([FromBody] SentOtpDto request)
     {
-        var result = await _authService.SendOtpAsync(request.Email);
+        var result = await _authService.SendOtpToRegisterAsync(request.Email);
         if (!result.IsSuccess)
         {
             return BadRequest(result.Error);

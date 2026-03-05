@@ -1,20 +1,19 @@
-﻿using UserAuth.Api.Data;
+﻿using System.Security.Cryptography;
+using System.Text;
+using UserAuth.Api.Data;
 using UserAuth.Api.Entities;
 using UserAuth.Api.Interfaces.Repository;
-using UserAuth.Api.Interfaces.Service;
 
 namespace UserAuth.Api.Repository.InMemory
 {
     public class InMemoryRefreshTokenRepo : IRefreshTokenRepository
     {
         private readonly InMemoryDbContext _dbContext;
-        private readonly ITokenService _tokenService;
         private readonly List<RefreshToken> _tokens;
 
-        public InMemoryRefreshTokenRepo(InMemoryDbContext dbContext, ITokenService tokenService)
+        public InMemoryRefreshTokenRepo(InMemoryDbContext dbContext)
         {
             _dbContext = dbContext;
-            this._tokenService = tokenService;
             _tokens = _dbContext.RefreshTokens;
         }
 
@@ -36,7 +35,7 @@ namespace UserAuth.Api.Repository.InMemory
 
         public Task<RefreshToken?> GetByTokenAsync(string token)
         {
-            var tokenHash = _tokenService.HashToken(token);
+            var tokenHash = HashToken(token);
             var found = _tokens.FirstOrDefault(t => t.TokenHash == tokenHash);
             return Task.FromResult(found);
         }
@@ -71,7 +70,7 @@ namespace UserAuth.Api.Repository.InMemory
                 return Task.FromResult(false);
             }
 
-            existing.TokenHash = _tokenService.HashToken(refreshToken.TokenHash);
+            existing.TokenHash = HashToken(refreshToken.TokenHash);
             existing.ExpiredAt = refreshToken.ExpiredAt;
             existing.IsRevoked = refreshToken.IsRevoked;
             existing.RevokedAt = refreshToken.RevokedAt;
@@ -101,6 +100,14 @@ namespace UserAuth.Api.Repository.InMemory
                 return null;
             }
             return Task.FromResult(tokenData);
+        }
+
+        private string HashToken(string token)
+        {
+            using var sha256 = SHA256.Create();
+            var bytes = Encoding.UTF8.GetBytes(token);
+            var hash = sha256.ComputeHash(bytes);
+            return Convert.ToBase64String((hash));
         }
     }
 }
