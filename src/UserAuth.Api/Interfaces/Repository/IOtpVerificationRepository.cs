@@ -6,6 +6,8 @@ namespace UserAuth.Api.Interfaces.Repository
     {
         Task AddAsync(OtpVerification otp);
 
+        Task<OtpVerification?> GetByEmailAsync(string email);
+
         Task<OtpVerification?> GetByIdAsync(int id);
         Task<OtpVerification?> VerifyOtpAsync(string email, string otpCode);
         Task<bool> AnyActiveOtpForEmailAsync(string email);

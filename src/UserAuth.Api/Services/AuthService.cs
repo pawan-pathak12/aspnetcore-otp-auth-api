@@ -80,29 +80,29 @@ namespace UserAuth.Api.Services
 
         }
 
-        public async Task<AuthResult> LoginAsync(string email, string password)
+        public async Task<AuthResult> LoginAsync(User user)
         {
-            var user = await _userRepo.GetByEmailAsync(email);
-            if (user == null)
+            var storedUser = await _userRepo.GetByEmailAsync(user?.Email);
+            if (storedUser == null)
             {
                 return AuthResult.Failure("Invalid credentials");
             }
 
             // verfify  password 
 
-            var result = _passwordHasher.VerifyHashedPassword(user, user.Password, password);
+            var result = _passwordHasher.VerifyHashedPassword(storedUser, storedUser.Password, user?.Password);
             if (result == PasswordVerificationResult.Failed)
             {
                 return AuthResult.Failure("Invalid credentials");
             }
-            var token = _tokenService.GenerateAccessToken(user);
+            var token = _tokenService.GenerateAccessToken(storedUser);
 
             // generate refresh token 
             var plainRefreshToken = _tokenService.GenerateRefreshTokenAsync();
 
             var refreshToken = new RefreshToken
             {
-                UserId = user.Id,
+                UserId = storedUser.Id,
                 TokenHash = _tokenService.HashToken(plainRefreshToken),
                 CreatedAt = DateTime.UtcNow,
                 IsRevoked = false,
@@ -165,12 +165,17 @@ namespace UserAuth.Api.Services
             {
                 return AuthResult.Failure("User aleady exists.");
             }
-            existingUser.Email = user.Email;
-            existingUser.Role = "User";
+            var newUser = new User
+            {
+                Email = user.Email,
+                Password = _passwordHasher.HashPassword(user, user.Password),
+                Role = "User",
+                IsActive = true,
+                IsVerified = true,
+                CreateAt = DateTime.UtcNow
+            };
 
-            var passwordHssh = _passwordHasher.HashPassword(user, user.Password);
-            existingUser.Password = passwordHssh;
-            await _userRepo.AddAsync(existingUser);
+            await _userRepo.AddAsync(newUser);
 
             return AuthResult.Success("user register Successfully");
 
