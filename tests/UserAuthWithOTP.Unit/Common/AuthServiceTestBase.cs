@@ -12,9 +12,11 @@ public abstract class AuthServiceTestBase
     protected IRefreshTokenService _refreshTokenService = null!;
     protected IOtpService _otpService = null!;
     protected IEmailService _emailService = null!;
+
     protected InMemoryUserRepo _userRepo = null!;
     protected InMemoryRefreshTokenRepo _inMemoryRefreshToken = null!;
     protected InMemoryOtpVerificationRepository _otpVerificationRepository = null!;
+
     protected AuthService _authService = null!;
 
     [TestInitialize]

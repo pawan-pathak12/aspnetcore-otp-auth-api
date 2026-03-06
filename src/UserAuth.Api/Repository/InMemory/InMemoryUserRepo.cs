@@ -45,10 +45,7 @@ namespace UserAuth.Api.Repository.InMemory
         public Task<User?> GetByEmailAsync(string email)
         {
             var user = _users.Find(x => x.Email == email && x.IsActive);
-            if (user == null)
-            {
-                return null;
-            }
+
             return Task.FromResult(user);
         }
 

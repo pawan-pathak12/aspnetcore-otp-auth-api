@@ -29,6 +29,11 @@ namespace UserAuth.Api.Repository.InMemory
             return Task.CompletedTask;
         }
 
+        public Task<OtpVerification?> GetByEmailAsync(string email)
+        {
+            var otp = _otpVerifications.Find(x => x.Email == email && !x.IsUsed);
+            return Task.FromResult(otp);
+        }
         public Task<bool> AnyActiveOtpForEmailAsync(string email)
         {
             var hasActive = _otpVerifications.Any(o =>

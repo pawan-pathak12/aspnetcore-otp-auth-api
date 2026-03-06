@@ -64,7 +64,12 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> LoginAsync([FromBody] LoginRequestDto request)
     {
-        var response = await _authService.LoginAsync(request.Email, request.Password);
+        var user = new User
+        {
+            Email = request.Email,
+            Password = request.Password
+        };
+        var response = await _authService.LoginAsync(user);
         if (!response.IsSuccess)
         {
             return BadRequest(response.Error);

@@ -20,6 +20,11 @@ namespace UserAuth.Api.Repository.EFCore
             await _dbContext.SaveChangesAsync();
         }
 
+        public async Task<OtpVerification?> GetByEmailAsync(string email)
+        {
+            return await _dbContext.OtpVerifications.FirstOrDefaultAsync(x => x.Email == email && !x.IsUsed);
+        }
+
         public async Task<OtpVerification?> GetByIdAsync(int id)
         {
             return await _dbContext.OtpVerifications
