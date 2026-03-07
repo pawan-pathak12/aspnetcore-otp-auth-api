@@ -137,7 +137,7 @@ namespace UserAuth.Api.Repository.InMemory
         public Task<OtpVerification?> VerifyOtpAsync(string email, string otpCode)
         {
             var validOtp = _otpVerifications
-                .Where(o => string.Equals(o.Email, email, StringComparison.OrdinalIgnoreCase) &&
+                .Where(o => o.Email == email &&
                             o.OtpCode == otpCode &&
                             !o.IsUsed &&
                             o.ExpiryTime > DateTime.UtcNow)

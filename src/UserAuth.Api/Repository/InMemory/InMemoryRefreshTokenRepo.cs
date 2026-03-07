@@ -35,8 +35,7 @@ namespace UserAuth.Api.Repository.InMemory
 
         public Task<RefreshToken?> GetByTokenAsync(string token)
         {
-            var tokenHash = HashToken(token);
-            var found = _tokens.FirstOrDefault(t => t.TokenHash == tokenHash);
+            var found = _tokens.FirstOrDefault(t => t.TokenHash == token);
             return Task.FromResult(found);
         }
 

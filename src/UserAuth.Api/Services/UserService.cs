@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using UserAuth.Api.Data;
 using UserAuth.Api.Entities;
 using UserAuth.Api.Interfaces.Repository;
 using UserAuth.Api.Interfaces.Service;
@@ -12,7 +11,7 @@ namespace UserAuth.Api.Services
         private readonly IUserRepository _userRepository;
         private readonly PasswordHasher<User> _passwordHasher;
 
-        public UserService(IUserRepository userRepository, AppDbContext appDbContext)
+        public UserService(IUserRepository userRepository)
         {
             this._userRepository = userRepository;
             _passwordHasher = new PasswordHasher<User>();
