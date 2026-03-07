@@ -27,9 +27,7 @@ namespace UserAuth.Api.Services
 
 
         #region JWT 
-        /*        use other service that is required for otp in here and
-                in controller this methods will be used to keep controller clean
-       */
+
         public async Task<AuthResult> RotateRefreshTokenAsync(string refreshToken)
         {
             var incomingTokenHash = _tokenService.HashToken(refreshToken);
@@ -57,6 +55,8 @@ namespace UserAuth.Api.Services
 
             //normal rotation of refreshtoken 
             existingToken.IsRevoked = true;
+            var user = new User();
+            user = existingToken.User;
 
             var accesstoken = _tokenService.GenerateAccessToken(existingToken.User);
             var plainrefreshToken = _tokenService.GenerateRefreshTokenAsync();

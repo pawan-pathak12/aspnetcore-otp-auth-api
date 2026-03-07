@@ -18,6 +18,7 @@ public abstract class AuthServiceTestBase
     protected InMemoryOtpVerificationRepository _otpVerificationRepository = null!;
 
     protected AuthService _authService = null!;
+    protected Mock<IConfiguration> ConfigMock { get; private set; } = null!;
 
     [TestInitialize]
     public void TestInit()
@@ -29,27 +30,16 @@ public abstract class AuthServiceTestBase
         _otpVerificationRepository = new InMemoryOtpVerificationRepository(dbContext);
 
         // Setup IConfiguration with actual values
-        var configurationMock = new Mock<IConfiguration>();
+        ConfigMock = new Mock<IConfiguration>();
+
         var jwtSectionMock = new Mock<IConfigurationSection>();
 
-        // Setup JWT settings (adjust keys based on your appsettings)
-        configurationMock
-            .Setup(c => c["Jwt:Key"])
-            .Returns("YourSuperSecretKeyThatIsAtLeast32Characters!!");
-        configurationMock
-            .Setup(c => c["Jwt:Issuer"])
-            .Returns("TestIssuer");
-        configurationMock
-            .Setup(c => c["Jwt:Audience"])
-            .Returns("TestAudience");
-        configurationMock
-            .Setup(c => c["Jwt:ExpirationInMinutes"])
-            .Returns("60");
+        jwtSectionMock.Setup(s => s["Key"]).Returns("this-is-your-very-secure-jwt-secret-key-1234567890");
+        jwtSectionMock.Setup(s => s["Issuer"]).Returns("JwtAuthLearning.Api");
+        jwtSectionMock.Setup(s => s["Audience"]).Returns("JwtAuthLearning.Api");
+        jwtSectionMock.Setup(s => s["ExpiresInMinutes"]).Returns("15");
 
-        configurationMock.
-            Setup(c => c["EmailSettings:SmtpServer"])
-            .Returns("smtp.gmail.com");
-
+        ConfigMock.Setup(c => c.GetSection("Jwt")).Returns(jwtSectionMock.Object);
         // Mock EmailService instead of using real one
         var emailServiceMock = new Mock<IEmailService>();
         emailServiceMock
@@ -63,7 +53,7 @@ public abstract class AuthServiceTestBase
         var loggerMock = new Mock<ILogger<OtpService>>();
 
         //  Create services in correct order
-        _tokenService = new TokenService(configurationMock.Object);
+        _tokenService = new TokenService(ConfigMock.Object);
         _emailService = emailServiceMock.Object;
         _refreshTokenService = new RefreshTokenService(_inMemoryRefreshToken);
         _otpService = new OtpService(
