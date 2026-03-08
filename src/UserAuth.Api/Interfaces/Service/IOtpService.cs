@@ -2,8 +2,7 @@
 {
     public interface IOtpService
     {
-        Task<bool> GenerateAndSaveOtpAsync(string email);
-        Task<bool> VerifyOtpAndCreateUserAsync(string email, string otp);
+        Task<bool> GenerateAndSendOtpAsync(string email);
         Task<bool> VerifyOtpAsync(string email, string otp);
     }
 }

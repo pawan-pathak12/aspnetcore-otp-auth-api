@@ -11,7 +11,6 @@ public class OtpService : IOtpService
 {
     private readonly IOtpVerificationRepository _otpVerificationRepository;
 
-    //  private readonly AppDbContext _dbContext;
     private readonly IEmailService _emailService;
     private readonly ILogger<OtpService> _logger;
     private readonly IUserRepository _userRepository;
@@ -19,13 +18,12 @@ public class OtpService : IOtpService
     public OtpService(IOtpVerificationRepository otpVerificationRepository, IEmailService emailService, ILogger<OtpService> logger, IUserRepository userRepository)
     {
         this._otpVerificationRepository = otpVerificationRepository;
-        //      _dbContext = dbContext;
         _emailService = emailService;
         _logger = logger;
         this._userRepository = userRepository;
     }
 
-    public async Task<bool> GenerateAndSaveOtpAsync(string email)
+    public async Task<bool> GenerateAndSendOtpAsync(string email)
     {
         email = email.ToLower().Trim();
 
@@ -40,7 +38,7 @@ public class OtpService : IOtpService
         //revoke previous OTPs
         await _otpVerificationRepository.RevokePreviousOtpsAsync(email);
 
-        // Generate 6-digit OTP (fixed the range!)
+        // Generate 6-digit OTP 
         var otp = new Random().Next(100000, 1000000).ToString();
         var otphash = HashOtp(otp);
 
@@ -65,30 +63,6 @@ public class OtpService : IOtpService
         return true;
     }
 
-    public async Task<bool> VerifyOtpAndCreateUserAsync(string email, string otp)
-    {
-        var otpHash = HashOtp(otp);
-        var otpEntry = VerifyOtpAsync(email, otpHash);
-
-        var user = await _userRepository.GetByEmailAsync(email);
-
-        if (user == null)
-        {
-            user = new User
-            {
-                Email = email,
-                IsActive = true,
-                IsVerified = true,
-                CreateAt = DateTime.UtcNow
-            };
-            await _userRepository.AddAsync(user);
-
-        }
-
-        _logger.LogInformation("OTP verified successfully for {Email} and added user too", email);
-        return true;
-    }
-
     public async Task<bool> VerifyOtpAsync(string email, string otp)
     {
         var otpHash = HashOtp(otp);
@@ -100,6 +74,8 @@ public class OtpService : IOtpService
             _logger.LogWarning("Invalid OTP attempt for {Email}", email);
             return false;
         }
+        _logger.LogInformation("OTP verified successfully for {Email} and added user too", email);
+
         await _otpVerificationRepository.MarkAsUsedAsync(email, otpHash);
         return true;
     }

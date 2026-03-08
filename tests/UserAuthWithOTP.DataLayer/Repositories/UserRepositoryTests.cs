@@ -1,7 +1,7 @@
 ﻿using System.Transactions;
 using UserAuth.Api.Entities;
 using UserAuth.Api.Interfaces.Repository;
-using UserAuth.Api.Repository;
+using UserAuth.Api.Repository.EFCore;
 using UserAuthWithOTP.DataLayer.Fixtures;
 
 namespace UserAuthWithOTP.DataLayer.Repositories
