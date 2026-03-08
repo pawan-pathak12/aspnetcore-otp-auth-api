@@ -3,7 +3,6 @@ using UserAuth.Api.Entities;
 using UserAuth.Api.Interfaces.Service;
 using UserAuth.Api.Repository.InMemory;
 using UserAuth.Api.Services;
-
 namespace UserAuthWithOTP.Unit.Services
 {
     [TestClass]
@@ -11,6 +10,7 @@ namespace UserAuthWithOTP.Unit.Services
     {
         private IUserService _userService = null!;
         private InMemoryUserRepo _userRepo = null!;
+        private Random rand = new Random();
 
         private string Password = "HelloUser!";
         [TestInitialize]
@@ -122,6 +122,88 @@ namespace UserAuthWithOTP.Unit.Services
 
 
         #region Negative Path
+
+        [TestMethod]
+        public async Task GetByIdAsync_WhenUserNotFound_ReturnFalse()
+        {
+            //Arrange
+            var userId = 123873;
+            //Act
+
+            var result = await _userService.GetByIdAsync(userId);
+            //Assert
+            Assert.IsNull(result);
+
+        }
+
+        [TestMethod]
+        public async Task GetAllAsync_WhenUsersNotFound_ReturnNull()
+        {
+
+            //Act
+            var result = await _userService.GetAllAsync();
+
+            //Assert
+            Assert.IsNull(result);
+        }
+
+        [TestMethod]
+        public async Task UpdateAsync_WhenUserNotFound_ReturnFalse()
+        {
+            //Arrange
+            var user = new User
+            {
+                Email = $"testuser{rand.Next(1000, 9999)}@gmail.com",
+                Password = Password,
+                IsActive = true,
+                Role = "User",
+                IsVerified = true
+            };
+
+            var update = new User
+            {
+                Id = user.Id,
+                Email = user.Email,
+                IsActive = true,
+                IsVerified = true,
+                Role = "Admin",
+                Password = user.Password
+            };
+
+            //Act
+            var result = await _userService.UpdateAsync(update);
+
+            //Assert
+            Assert.IsFalse(result);
+
+        }
+
+        [TestMethod]
+        public async Task DeleteAsync_WhenUserNotFound_ReturnFalse()
+        {
+            //A Arrange 
+            int id = rand.Next(1000, 9999);
+
+            //Act
+            var result = await _userService.DeleteAsync(id);
+
+            //Assert
+            Assert.IsFalse(result);
+
+        }
+
+        [TestMethod]
+        public async Task GetByEmailAsync_WhenUserNotFound_ReturnNull()
+        {
+            //Arrange
+            var email = $"test{rand.Next(1100, 9999)}@gmail.com";
+
+            //Act
+            var result = await _userService.GetByEmailAsync(email);
+
+            //Assert
+            Assert.IsNull(result);
+        }
 
         #endregion
 

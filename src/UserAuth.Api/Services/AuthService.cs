@@ -144,7 +144,7 @@ namespace UserAuth.Api.Services
                 return AuthResult.Failure("User already Exists");
             }
 
-            var isCreated = await _otpService.GenerateAndSaveOtpAsync(email);
+            var isCreated = await _otpService.GenerateAndSendOtpAsync(email);
             return new AuthResult { IsSuccess = true };
         }
 
