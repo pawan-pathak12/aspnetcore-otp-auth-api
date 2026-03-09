@@ -9,6 +9,7 @@ namespace UserAuthWithOTP.API.Fixtures
         protected static CustomWebApplicationFactory Factory = null!;
         protected HttpClient _client = null!;
         protected TransactionScope _scope = null!;
+        protected TestDataBuilder dataBuilder = null!;
         protected IServiceProvider Services = null!;
 
         [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
@@ -31,7 +32,8 @@ namespace UserAuthWithOTP.API.Fixtures
             _client = Factory.CreateClient();
 
             var scope = Factory.Services.CreateScope();
-
+            Services = scope.ServiceProvider;
+            dataBuilder = new TestDataBuilder(Services);
 
         }
 
