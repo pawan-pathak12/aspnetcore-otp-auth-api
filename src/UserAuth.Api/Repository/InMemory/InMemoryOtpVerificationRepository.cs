@@ -141,7 +141,6 @@ namespace UserAuth.Api.Repository.InMemory
                             o.OtpCode == otpCode &&
                             !o.IsUsed &&
                             o.ExpiryTime > DateTime.UtcNow)
-                .OrderByDescending(o => o.CreatedAt)
                 .FirstOrDefault();
 
             return Task.FromResult(validOtp);

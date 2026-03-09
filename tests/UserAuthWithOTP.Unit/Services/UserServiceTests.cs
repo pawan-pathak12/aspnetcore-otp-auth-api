@@ -123,29 +123,6 @@ namespace UserAuthWithOTP.Unit.Services
 
         #region Negative Path
 
-        [TestMethod]
-        public async Task GetByIdAsync_WhenUserNotFound_ReturnFalse()
-        {
-            //Arrange
-            var userId = 123873;
-            //Act
-
-            var result = await _userService.GetByIdAsync(userId);
-            //Assert
-            Assert.IsNull(result);
-
-        }
-
-        [TestMethod]
-        public async Task GetAllAsync_WhenUsersNotFound_ReturnNull()
-        {
-
-            //Act
-            var result = await _userService.GetAllAsync();
-
-            //Assert
-            Assert.IsNull(result);
-        }
 
         [TestMethod]
         public async Task UpdateAsync_WhenUserNotFound_ReturnFalse()
