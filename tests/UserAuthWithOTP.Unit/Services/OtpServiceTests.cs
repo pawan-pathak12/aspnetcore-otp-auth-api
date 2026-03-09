@@ -16,8 +16,14 @@ namespace UserAuthWithOTP.Unit.Services
         [TestMethod]
         public async Task GenerateAndSendOtpAsync_WhenValid_ReturnTrue()
         {
+            /*
+             * Requirement for this test to pass : In  OtpServiceTestBase:
+                *   Add : SenderEmail , SenderPassword , SenderName : so you can sent email 
+             */
             //Arrange 
-            string email = $"test@gmail{rand.Next(1000, 9999)}.com";
+            //   string email = $"test@gmail{rand.Next(1000, 9999)}.com";
+
+            string email = "pawanpathak413@gmail.com";
 
             //Act 
             var result = await _otpService.GenerateAndSendOtpAsync(email);

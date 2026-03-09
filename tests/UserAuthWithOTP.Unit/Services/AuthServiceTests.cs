@@ -6,7 +6,7 @@ namespace UserAuthWithOTP.Unit.Services
     [TestClass]
     public class AuthServiceTests : AuthServiceTestBase
     {
-        private string Passeord = "HelloWorld!";
+        private string Password = "HelloWorld!";
         private Random rand = new Random();
 
         #region Positive Path 
@@ -33,16 +33,22 @@ namespace UserAuthWithOTP.Unit.Services
         {
             //Arrange 
             string email = $"testuser{rand.Next(1000, 9999)}@gmail.com";
+            var otp = GenerateOtp();
 
-            await _authService.SendOtpToRegisterAsync(email);
+            var otpVerification = new OtpVerification
+            {
+                Email = email,
+                OtpCode = Hash(otp),
+                ExpiryTime = DateTime.UtcNow.AddMinutes(5),
+                IsUsed = false,
+                CreatedAt = DateTime.UtcNow
+            };
 
-            var storedOtp = await _otpVerificationRepository.GetByEmailAsync(email);
-
-            var otpCode = storedOtp.OtpCode;
+            await _otpVerificationRepository.AddAsync(otpVerification);
 
             //Act 
 
-            var result = await _authService.VerifyOtpAsync(otpCode, email);
+            var result = await _authService.VerifyOtpAsync(otp, otpVerification.Email);
 
             //Assert
             Assert.IsTrue(result.IsSuccess);
@@ -60,7 +66,7 @@ namespace UserAuthWithOTP.Unit.Services
                 IsActive = true,
                 IsVerified = true,
                 Role = "User",
-                Password = Passeord
+                Password = Password
             };
             //Act 
             var result = await _authService.RegisterAsync(user);
@@ -76,28 +82,28 @@ namespace UserAuthWithOTP.Unit.Services
         public async Task LoginAsync_WhenValid_ReturnAccessAndRefreshToken()
         {
             //Arrange 
-
             var rand = new Random();
 
             //directing inserting to memory so hashing is required as service check it while validing user during login
 
-            var hashPassword = Hash(Passeord);
             var user = new User
             {
                 Email = $"testuser{rand.Next(1000, 9999)}@gmail.com",
                 IsActive = true,
                 IsVerified = true,
                 Role = "User",
-                Password = hashPassword
+                Password = Password
             };
 
+            var hashPassword = HashPassword(user);
+            user.Password = hashPassword;
             await _userRepo.AddAsync(user);
 
             var login = new User
             {
                 Email = user.Email,
                 Role = user.Role,
-                Password = Passeord
+                Password = Password
             };
             //Act 
             var result = await _authService.LoginAsync(login);
@@ -106,7 +112,7 @@ namespace UserAuthWithOTP.Unit.Services
             Assert.IsTrue(result.IsSuccess);
             Assert.IsNull(result.Error);
             Assert.IsNotNull(result.AccessTokenhash);
-            Assert.IsNull(result.RefreshToken);
+            Assert.IsNotNull(result.RefreshToken);
 
         }
 
@@ -114,15 +120,18 @@ namespace UserAuthWithOTP.Unit.Services
         public async Task RotateRefreshTokenAsync_WhenTokenExists_ReturnNewAccessAndRefreshToken()
         {
             //Arrange 
-            var hashPassword = Hash(Passeord);
             var user = new User
             {
                 Email = $"testuser{rand.Next(1000, 9999)}@gmail.com",
                 IsActive = true,
                 IsVerified = true,
                 Role = "User",
-                Password = hashPassword
+                Password = Password
             };
+
+            var hashPassword = HashPassword(user);
+            user.Password = hashPassword;
+
             var userId = await _userRepo.AddAsync(user);
 
             var token = _tokenService.GenerateRefreshTokenAsync();
@@ -173,7 +182,7 @@ namespace UserAuthWithOTP.Unit.Services
             {
                 Email = $"testuser{rand.Next(1000, 9999)}.com",
                 IsActive = true,
-                Password = Passeord,
+                Password = Password,
                 IsVerified = true
             };
 
@@ -190,7 +199,7 @@ namespace UserAuthWithOTP.Unit.Services
         {
 
             //Arrange 
-            var hashPassword = Hash(Passeord);
+            var hashPassword = Hash(Password);
             var user = new User
             {
                 Email = $"testuser{rand.Next(1000, 9999)}.com",
@@ -220,7 +229,7 @@ namespace UserAuthWithOTP.Unit.Services
         public async Task LoginAsync_WhenUserIsInActive_ReturnFalse()
         {
             //Arrange 
-            var hashPassword = Hash(Passeord);
+            var hashPassword = Hash(Password);
             var user = new User
             {
                 Email = $"testuser{rand.Next(1000, 9999)}.com",
@@ -234,7 +243,7 @@ namespace UserAuthWithOTP.Unit.Services
             var login = new User
             {
                 Email = user.Email,
-                Password = Passeord,
+                Password = Password,
                 Role = user.Role
             };
             //Act 
@@ -259,7 +268,7 @@ namespace UserAuthWithOTP.Unit.Services
         public async Task RotateRefreshTokenAsync_WhenTokenNotFound_Returnfalse()
         {
             //Arrange 
-            var hashPassword = Hash(Passeord);
+            var hashPassword = Hash(Password);
             var token = _tokenService.GenerateRefreshTokenAsync();
 
             //Act 
@@ -276,7 +285,7 @@ namespace UserAuthWithOTP.Unit.Services
         public async Task RotateRefreshTokenAsync_WhenRevokedTokenUsed_Returnfalse()
         {
             //Arrange 
-            var hashPassword = Hash(Passeord);
+            var hashPassword = Hash(Password);
             var user = new User
             {
                 Email = $"testuser{rand.Next(1000, 9999)}@gmail.com",
@@ -316,7 +325,7 @@ namespace UserAuthWithOTP.Unit.Services
         public async Task RotateRefreshTokenAsync_WhenTokenIsExpired_Returnfalse()
         {
             //Arrange 
-            var hashPassword = Hash(Passeord);
+            var hashPassword = Hash(Password);
             var user = new User
             {
                 Email = $"testuser{rand.Next(1000, 9999)}@gmail.com",
@@ -359,7 +368,7 @@ namespace UserAuthWithOTP.Unit.Services
                 IsActive = true,
                 IsVerified = true,
                 Email = $"testuser{rand.Next(1000, 9999)}@gmailcom",
-                Password = Passeord
+                Password = Password
             };
 
             await _userRepo.AddAsync(user);
@@ -425,7 +434,7 @@ namespace UserAuthWithOTP.Unit.Services
                 IsActive = true,
                 IsVerified = true,
                 Role = "User",
-                Password = Passeord
+                Password = Password
             };
 
             await _userRepo.AddAsync(user);
@@ -440,14 +449,24 @@ namespace UserAuthWithOTP.Unit.Services
         }
         #endregion
 
-        private string Hash(string password)
+        private string Hash(string code)
         {
             using var sha256 = SHA256.Create();
-            var bytes = Encoding.UTF8.GetBytes(password);
+            var bytes = Encoding.UTF8.GetBytes(code);
             var hash = sha256.ComputeHash(bytes);
             return Convert.ToBase64String(hash);
 
         }
 
+        private string HashPassword(User user)
+        {
+            return _passwordHasher.HashPassword(user, user.Password);
+
+        }
+
+        private string GenerateOtp()
+        {
+            return rand.Next(100000, 1000000).ToString();
+        }
     }
 }

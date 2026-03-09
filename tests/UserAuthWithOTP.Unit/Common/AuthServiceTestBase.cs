@@ -1,7 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using UserAuth.Api.Data;
+using UserAuth.Api.Entities;
 using UserAuth.Api.Interfaces.Service;
 using UserAuth.Api.Repository.InMemory;
 using UserAuth.Api.Services;
@@ -19,12 +21,14 @@ public abstract class AuthServiceTestBase
 
     protected AuthService _authService = null!;
     protected Mock<IConfiguration> ConfigMock { get; private set; } = null!;
+    protected PasswordHasher<User> _passwordHasher { get; set; } = null!;
+
 
     [TestInitialize]
     public void TestInit()
     {
         var dbContext = new InMemoryDbContext();
-
+        _passwordHasher = new PasswordHasher<User>();
         _userRepo = new InMemoryUserRepo(dbContext);
         _inMemoryRefreshToken = new InMemoryRefreshTokenRepo(dbContext);
         _otpVerificationRepository = new InMemoryOtpVerificationRepository(dbContext);
