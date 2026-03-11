@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using System.Net.Http.Headers;
 using System.Transactions;
 
 namespace UserAuthWithOTP.API.Fixtures
@@ -10,6 +11,7 @@ namespace UserAuthWithOTP.API.Fixtures
         protected HttpClient _client = null!;
         protected TransactionScope _scope = null!;
         protected TestDataBuilder testDataBuilder = null!;
+
         protected IServiceProvider Services = null!;
 
         [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
@@ -25,7 +27,7 @@ namespace UserAuthWithOTP.API.Fixtures
         }
 
         [TestInitialize]
-        public void TestInit()
+        public async Task TestInit()
         {
             _scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
 
@@ -34,6 +36,12 @@ namespace UserAuthWithOTP.API.Fixtures
             var scope = Factory.Services.CreateScope();
             Services = scope.ServiceProvider;
             testDataBuilder = new TestDataBuilder(Services);
+
+            var user = await testDataBuilder.CreateAndReturnUser();
+            var token = JwtTestTokenGenerator.GenerateToken(user);
+
+            _client.DefaultRequestHeaders.Authorization =
+                 new AuthenticationHeaderValue("Bearer", token);
 
         }
 

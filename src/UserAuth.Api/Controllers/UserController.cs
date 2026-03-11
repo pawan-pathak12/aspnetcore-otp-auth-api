@@ -17,7 +17,6 @@ namespace UserAuth.Api.Controllers
             _userService = userService;
         }
 
-        // POST: api/User
         [HttpPost]
         public async Task<IActionResult> CreateUser([FromBody] User user)
         {
@@ -28,7 +27,6 @@ namespace UserAuth.Api.Controllers
             return CreatedAtAction(nameof(GetUserById), new { id = resposne.Id }, user);
         }
 
-        // GET: api/User/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserById(int id)
         {
@@ -38,8 +36,8 @@ namespace UserAuth.Api.Controllers
 
             return Ok(user);
         }
+
         [AllowAnonymous]
-        // GET: api/User
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
@@ -47,7 +45,6 @@ namespace UserAuth.Api.Controllers
             return Ok(users);
         }
 
-        // PUT: api/User/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
         {
@@ -61,7 +58,6 @@ namespace UserAuth.Api.Controllers
             return NoContent();
         }
 
-        // DELETE: api/User/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {

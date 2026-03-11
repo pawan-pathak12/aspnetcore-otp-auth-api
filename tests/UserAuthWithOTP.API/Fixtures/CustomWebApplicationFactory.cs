@@ -25,7 +25,7 @@ namespace UserAuthWithOTP.API.Fixtures
                 config.AddInMemoryCollection(settings!);
             });
 
-            builder.UseEnvironment("Test");
+            //   builder.UseEnvironment("Test");
         }
     }
 }
