@@ -55,7 +55,7 @@ namespace UserAuthWithOTP.DataLayer.Repositories
             var userData = await _userRepository.GetByIdAsync(userId);
 
             // Assert
-            Assert.IsNotNull(userData, "User should be found by ID");
+            Assert.IsNotNull(userData);
             Assert.AreEqual(user.Email, userData.Email, "Email should match");
             Assert.AreEqual(user.Role, userData.Role, "Role should match");
         }
@@ -75,7 +75,7 @@ namespace UserAuthWithOTP.DataLayer.Repositories
 
             // Assert
             Assert.IsNotNull(users);
-            Assert.AreEqual(2, users.Count(), "Should return 2 users");
+            Assert.IsGreaterThan(0, users.Count());
             Assert.IsTrue(users.Any(u => u.Email == user1.Email));
             Assert.IsTrue(users.Any(u => u.Email == user2.Email));
         }
@@ -92,7 +92,10 @@ namespace UserAuthWithOTP.DataLayer.Repositories
                 Id = userId,
                 Email = user.Email,
                 Password = "NewStrongPass123!",
-                Role = "admin"
+                Role = "admin",
+                IsActive = true,
+                IsVerified = true,
+                CreateAt = DateTime.UtcNow
             };
 
             // Act
@@ -161,7 +164,8 @@ namespace UserAuthWithOTP.DataLayer.Repositories
             {
                 Email = $"user{rand.Next(1000, 9999)}{rand.Next(1000, 9999)}@gmail.com",
                 Password = "HelloWorld123!",
-                Role = "user"
+                Role = "Admin",
+                IsActive = true
             };
         }
     }

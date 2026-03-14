@@ -17,7 +17,7 @@ namespace UserAuthWithOTP.DataLayer.Fixtures
                 .Build();
 
             var options = new DbContextOptionsBuilder<AppDbContext>()
-                 .UseSqlServer(Configuration.GetConnectionString("DefaultConnection")) // or your test connection string
+                 .UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
                  .Options;
             DbContext = new AppDbContext(options);
 

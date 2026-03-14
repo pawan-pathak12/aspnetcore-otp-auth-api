@@ -39,9 +39,13 @@ namespace UserAuth.Api.Services
             {
                 return AuthResult.Failure($"Token not found or invalid");
             }
+            if (existingToken.User == null)
+            {
+                return AuthResult.Failure("User is null..");
+            }
 
-            // if : reuse refreshToken detection 
-            // then revoke all token for that user 
+            // if : reuse refreshToken detection :then revoke all token for that user 
+
             if (existingToken.IsRevoked)
             {
                 await _refreshTokenService.RevokeTokenAsync(existingToken.UserId);
@@ -55,26 +59,27 @@ namespace UserAuth.Api.Services
 
             //normal rotation of refreshtoken 
             existingToken.IsRevoked = true;
-            var user = new User();
-            user = existingToken.User;
 
-            var accesstoken = _tokenService.GenerateAccessToken(existingToken.User);
+            var user = existingToken.User;
+
+            var accesstoken = _tokenService.GenerateAccessToken(user);
             var plainrefreshToken = _tokenService.GenerateRefreshTokenAsync();
-            var hashToken = _tokenService.HashToken(plainrefreshToken);
+            var hashRefToken = _tokenService.HashToken(plainrefreshToken);
 
             var token = new RefreshToken
             {
                 UserId = existingToken.UserId,
-                TokenHash = hashToken,
+                TokenHash = hashRefToken,
                 CreatedAt = DateTime.UtcNow,
                 IsRevoked = false,
-                ExpiredAt = DateTime.UtcNow.AddDays(7)
+                ExpiredAt = DateTime.UtcNow.AddDays(7),
+                User = user
             };
 
             await _refreshTokenService.CreateTokenAsync(token);
 
             return AuthResult.Success(
-                _tokenService.HashToken(accesstoken),
+                accesstoken,
                 plainrefreshToken, token.ExpiredAt
                 );
 
@@ -91,10 +96,18 @@ namespace UserAuth.Api.Services
             // verfify  password 
 
             var result = _passwordHasher.VerifyHashedPassword(storedUser, storedUser.Password, user?.Password);
+
             if (result == PasswordVerificationResult.Failed)
             {
                 return AuthResult.Failure("Invalid credentials");
             }
+            else if (result == PasswordVerificationResult.SuccessRehashNeeded)
+            {
+                storedUser.Password = _passwordHasher.HashPassword(storedUser, user.Password);
+                await _userRepo.UpdateAsync(storedUser);
+            }
+
+
             var token = _tokenService.GenerateAccessToken(storedUser);
 
             // generate refresh token 
@@ -113,8 +126,8 @@ namespace UserAuth.Api.Services
 
 
             return AuthResult.Success(
-                _tokenService.HashToken(token),
-                refreshToken.TokenHash,
+                token,
+                plainRefreshToken,
                 refreshToken.ExpiredAt);
         }
 

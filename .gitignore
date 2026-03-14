@@ -8,6 +8,7 @@ obj/
 .vs/
 appsettings.json
 appsettings.Test.json
+appsettings.Test.json
 *.suo
 appsettings.Development.json
 .idea

@@ -46,8 +46,10 @@ namespace UserAuth.Api.Services
         // later convert token to tokenhash
         public async Task<RefreshToken?> GetDataByTokenAsync(string token)
         {
-            return await _refreshTokenRepository.GetByTokenAsync(token);
 
+            var tokenData = await _refreshTokenRepository.GetDataByTokenAsync(token);
+
+            return tokenData;
         }
 
         public async Task<bool> UpdateAsync(int id, RefreshToken refreshToken)

@@ -1,30 +1,26 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 using System.Security.Cryptography;
 using System.Text;
 using UserAuth.Api.Entities;
 using UserAuth.Api.Interfaces.Repository;
 using UserAuth.Api.Interfaces.Service;
 
-namespace UserAuthWithOTP.API
+namespace UserAuthWithOTP.API.Fixtures
 {
     public class TestDataBuilder
     {
-        public readonly IUserRepository _userRepository;
+        public IUserRepository _userRepository;
         public IOtpVerificationRepository _otpVerificationRepository;
         public IRefreshTokenRepository _refreshTokenRepository;
         public ITokenService _tokenService;
-        private string Password = "TestUser!11";
+        public string Password = "TestUser!11";
+        private readonly PasswordHasher<User> _passwordHasher;
 
-        public string DefaultPassword
-        {
-            get { return Password; }
-            set { Password = value; }
-        }
-
-        //   public const string DefaultPassword = "TestUser!11";
 
         public TestDataBuilder(IServiceProvider serviceProvider)
         {
+            _passwordHasher = new PasswordHasher<User>();
             _userRepository = serviceProvider.GetRequiredService<IUserRepository>();
             _otpVerificationRepository = serviceProvider.GetRequiredService<IOtpVerificationRepository>();
             _refreshTokenRepository = serviceProvider.GetRequiredService<IRefreshTokenRepository>();
@@ -41,22 +37,31 @@ namespace UserAuthWithOTP.API
 
         public async Task<User> CreateAndReturnUser()
         {
-            var user = new User();
             var rand = new Random();
 
-            user.Password = Hash(Password);
-            user.Email = $"user+{rand.Next(10000, 99999)}@gmail.com";
-            user.Role = "Admin";
+            var user = new User
+            {
+                Email = $"user+{rand.Next(10000, 99999)}@gmail.com",
+                IsActive = true,
+                IsVerified = true,
+                Password = Password,
+                Role = "Admin",
+                CreateAt = DateTime.UtcNow
+            };
+            var passwordhash = HashPassword(user);
+            user.Password = passwordhash;
 
             var userId = await _userRepository.AddAsync(user);
-            var userData = await _userRepository.GetByEmailAsync(user.Email);
+            var userData = await _userRepository.GetByIdAsync(userId);
 
             return new User
             {
                 Email = userData.Email,
                 Role = userData.Role,
                 Id = userId,
-                Password = DefaultPassword
+                Password = Password,
+                IsActive = true,
+                IsVerified = true
             };
         }
 
@@ -111,6 +116,14 @@ namespace UserAuthWithOTP.API
 
         }
 
+
+        #region Helper 
+
+        public string HashPassword(User user)
+        {
+            return _passwordHasher.HashPassword(user, user.Password);
+        }
+        #endregion
 
     }
 }

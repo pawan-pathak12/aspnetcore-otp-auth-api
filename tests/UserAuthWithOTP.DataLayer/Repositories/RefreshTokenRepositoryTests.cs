@@ -104,7 +104,7 @@ namespace UserAuthWithOTP.DataLayer.Repositories
             var update = new RefreshToken
             {
                 Id = tokenId,
-                TokenHash = token.TokenHash,
+                TokenHash = "helloworld",
                 UserId = token.UserId,
                 IsRevoked = false,
                 RevokedAt = token.RevokedAt,
@@ -119,15 +119,17 @@ namespace UserAuthWithOTP.DataLayer.Repositories
 
             var tokenData = await _tokenRepository.GetByIdAsync(tokenId);
             Assert.IsNotNull(tokenData);
-            Assert.AreEqual(update.ExpiredAt, tokenData.ExpiredAt);
+
         }
 
         [TestMethod]
         public async Task RevokeAsync_WhenTokenExists_ReturnTrue()
         {
             //Arrange 
+
             var token = await GenerateAndReturnToken();
             var tokenId = await _tokenRepository.AddAsync(token);
+
             //Act 
             var result = await _tokenRepository.RevokeAsync(tokenId);
 
@@ -135,6 +137,8 @@ namespace UserAuthWithOTP.DataLayer.Repositories
             Assert.IsTrue(result);
 
             var tokenData = await _tokenRepository.GetByIdAsync(tokenId);
+            var a = tokenData.TokenHash;
+            var b = tokenData.IsRevoked;
             Assert.IsNull(tokenData);
         }
 

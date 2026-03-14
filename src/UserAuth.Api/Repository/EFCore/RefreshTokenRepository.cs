@@ -21,7 +21,7 @@ public class RefreshTokenRepository : IRefreshTokenRepository
 
     public async Task<RefreshToken?> GetByIdAsync(int id)
     {
-        return await _context.RefreshTokens.FindAsync(id);
+        return await _context.RefreshTokens.FirstOrDefaultAsync(x => x.Id == id);
     }
 
     public async Task<RefreshToken?> GetByTokenAsync(string token)
@@ -39,7 +39,7 @@ public class RefreshTokenRepository : IRefreshTokenRepository
 
     public async Task<bool> RevokeAsync(int id)
     {
-        var refreshToken = await _context.RefreshTokens.FindAsync(id);
+        var refreshToken = await _context.RefreshTokens.FirstOrDefaultAsync(x => x.Id == id);
         if (refreshToken == null) return false;
 
         refreshToken.IsRevoked = true;
