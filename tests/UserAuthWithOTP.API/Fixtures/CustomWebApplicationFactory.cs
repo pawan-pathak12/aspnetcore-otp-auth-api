@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
-
 namespace UserAuthWithOTP.API.Fixtures
 {
     public class CustomWebApplicationFactory : WebApplicationFactory<Program>
@@ -10,9 +9,9 @@ namespace UserAuthWithOTP.API.Fixtures
         {
 
             builder.ConfigureAppConfiguration(services =>
-            {
+        {
 
-            });
+        });
 
             builder.ConfigureAppConfiguration(config =>
             {
@@ -20,12 +19,13 @@ namespace UserAuthWithOTP.API.Fixtures
                 {
                     {"Jwt:Issuer", "JwtAuthLearning" },
                     {"Jwt:Audience", "JwtAuthLearningUsers" },
-                    {"Jwt:key", "THIS_IS_A_SUPER_SECRET_KEY_CHANGE_LATER_BYOWNER" }
+                    {"Jwt:key", "THIS_IS_A_SUPER_SECRET_KEY_CHANGE_LATER_BYOWNER" } ,
+                    {"Jwt:ExpiresInMinutes", "15" } ,
                 };
                 config.AddInMemoryCollection(settings!);
             });
 
-            //   builder.UseEnvironment("Test");
+            builder.UseEnvironment("Test");
         }
     }
 }

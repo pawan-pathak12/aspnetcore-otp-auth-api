@@ -2,14 +2,15 @@
 {
     public static class CookieOptionsHelper
     {
-        public static CookieOptions RefreshTokenCookie(DateTime expiresAt)
+        public static CookieOptions RefreshTokenCookie(DateTime expiryDate)
         {
             return new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true, //goes through https only
-                SameSite = SameSiteMode.Strict,
-                Expires = expiresAt
+                Secure = false,              // ✅ false for test environment
+                SameSite = SameSiteMode.Lax, // ✅ Lax, not Strict
+                Expires = expiryDate,
+                Path = "/"
             };
         }
     }

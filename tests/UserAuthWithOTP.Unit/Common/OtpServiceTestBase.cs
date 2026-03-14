@@ -36,8 +36,8 @@ namespace UserAuthWithOTP.Unit.Common
 
             emailSection.Setup(s => s["SmtpServer"]).Returns("smtp.gmail.com");
             emailSection.Setup(s => s["Port"]).Returns("587");
-            emailSection.Setup(s => s["SenderEmail"]).Returns("predipoli@gmail.com");
-            emailSection.Setup(s => s["SenderPassword"]).Returns("sulnpoeznphmmabx");
+            emailSection.Setup(s => s["SenderEmail"]).Returns("test@gmail.com");
+            emailSection.Setup(s => s["SenderPassword"]).Returns("yourpassword");
             emailSection.Setup(s => s["SenderName"]).Returns("Pawan");
 
             ConfigMock.Setup(c => c.GetSection("EmailSettings")).Returns(emailSection.Object);

@@ -267,13 +267,9 @@ namespace UserAuthWithOTP.Unit.Services
         [TestMethod]
         public async Task RotateRefreshTokenAsync_WhenTokenNotFound_Returnfalse()
         {
-            //Arrange 
-            var hashPassword = Hash(Password);
-            var token = _tokenService.GenerateRefreshTokenAsync();
-
             //Act 
 
-            var result = await _authService.RotateRefreshTokenAsync(token);
+            var result = await _authService.RotateRefreshTokenAsync("token");
 
             //Assert
 

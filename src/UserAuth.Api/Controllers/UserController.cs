@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using UserAuth.Api.DTOs.Users;
 using UserAuth.Api.Entities;
 using UserAuth.Api.Interfaces.Service;
 
@@ -7,7 +8,7 @@ namespace UserAuth.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -18,8 +19,14 @@ namespace UserAuth.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateUser([FromBody] User user)
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserDto createUser)
         {
+            var user = new User
+            {
+                Email = createUser.Email,
+                Password = createUser.Password
+            };
+
             if (user == null)
                 return BadRequest("User data is required.");
 
@@ -31,23 +38,50 @@ namespace UserAuth.Api.Controllers
         public async Task<IActionResult> GetUserById(int id)
         {
             var user = await _userService.GetByIdAsync(id);
+
             if (user == null)
                 return NotFound();
+
+            var userDto = new UserResponseDto
+            {
+                Id = user.Id,
+                Email = user.Email,
+                Role = user.Role,
+                CreateAt = user.CreateAt,
+                IsActive = user.IsActive
+            };
 
             return Ok(user);
         }
 
-        [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
             var users = await _userService.GetAllAsync();
-            return Ok(users);
+
+            var userDto = users.Select(u => new UserResponseDto
+            {
+                Id = u.Id,
+                Email = u.Email,
+                Role = u.Role,
+                CreateAt = u.CreateAt,
+                IsActive = u.IsActive
+            });
+
+            return Ok(userDto);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDto updateUser)
         {
+            var user = new User
+            {
+                Id = id,
+                Password = updateUser.Password,
+                IsActive = updateUser.IsActive,
+                Role = updateUser.Role
+            };
+
             if (user == null || user.Id != id)
                 return BadRequest("Invalid user data.");
 
@@ -63,8 +97,9 @@ namespace UserAuth.Api.Controllers
         {
             var deleted = await _userService.DeleteAsync(id);
             if (!deleted)
+            {
                 return NotFound();
-
+            }
             return NoContent();
         }
 

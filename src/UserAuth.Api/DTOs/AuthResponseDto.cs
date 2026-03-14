@@ -1,8 +1,11 @@
-﻿namespace UserAuth.Api.DTOs
+﻿using System.Text.Json.Serialization;
+
+namespace UserAuth.Api.DTOs
 {
     public class AuthResponseDto
     {
-        public string? HashedAccessToken { get; set; }
+        [JsonPropertyName("accessToken")]
+        public string? AccessToken { get; set; }
         public string? HashedRefreshToken { get; set; }
         public DateTime ExpiredAt { get; set; }
     }

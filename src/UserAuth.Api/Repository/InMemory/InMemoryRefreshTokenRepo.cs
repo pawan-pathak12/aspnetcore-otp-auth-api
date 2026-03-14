@@ -94,13 +94,24 @@ namespace UserAuth.Api.Repository.InMemory
         {
             var tokenData = _tokens
                 .Find(x => x.TokenHash == token && !x.IsRevoked);
+
             if (tokenData == null)
             {
-                return null;
+                // No token found, return null
+                return Task.FromResult<RefreshToken?>(null);
             }
+
+            var user = _dbContext.Users.Find(x => x.Id == tokenData.UserId);
+
+            // If user not found, you can decide whether to return null or keep tokenData
+            if (user == null)
+            {
+                return Task.FromResult<RefreshToken?>(null);
+            }
+
+            tokenData.User = user;
             return Task.FromResult(tokenData);
         }
-
         private string HashToken(string token)
         {
             using var sha256 = SHA256.Create();

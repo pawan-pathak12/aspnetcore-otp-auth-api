@@ -40,7 +40,7 @@ namespace UserAuth.Api.Repository.EFCore
 
         public async Task<User?> GetByIdAsync(int id)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id && x.IsActive == true);
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id && x.IsActive);
             if (user == null)
             {
                 return null;
@@ -58,7 +58,8 @@ namespace UserAuth.Api.Repository.EFCore
 
             result.IsVerified = user.IsVerified;
             result.IsActive = user.IsActive;
-            result.IsActive = user.IsActive;
+            result.Role = user.Role;
+            result.Password = user.Password;
 
             _context.Users.Update(result);
             await _context.SaveChangesAsync();

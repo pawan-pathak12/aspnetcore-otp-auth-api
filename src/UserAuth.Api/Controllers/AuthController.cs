@@ -12,20 +12,14 @@ namespace UserAuth.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly ILogger<AuthController> _logger;
-    private readonly IUserService _userService;
     private readonly IAuthService _authService;
 
     public AuthController(ILogger<AuthController> logger,
         IUserService userService, IAuthService authService)
     {
         _logger = logger;
-        this._userService = userService;
         this._authService = authService;
     }
-
-
-
-    #region New 
 
     [HttpPost("register-sent-otp")]
     public async Task<IActionResult> RegisterAsync([FromBody] SentOtpDto request)
@@ -81,7 +75,7 @@ public class AuthController : ControllerBase
             CookieOptionsHelper.RefreshTokenCookie(response.ExpiryDate)
             );
 
-        return Ok(new { accesstoken = response.AccessTokenhash });
+        return Ok(new { accessToken = response.AccessTokenhash });
     }
 
 
@@ -127,5 +121,5 @@ public class AuthController : ControllerBase
 
         return Ok("Log out successfully");
     }
-    #endregion
+
 }
